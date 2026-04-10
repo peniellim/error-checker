@@ -126,18 +126,6 @@
       </div>
     </div>
 
-    <div class="separator"><hr><span>Timing</span><hr></div>
-    <div class="checks-grid" id="checks-grid-timing"></div>
-
-    <div class="separator" style="margin-top:0.75rem;"><hr><span>Text content</span><hr></div>
-    <div class="checks-grid" id="checks-grid-text"></div>
-
-    <div class="separator" style="margin-top:0.75rem;"><hr><span>Character limits &amp; lines</span><hr></div>
-    <div class="checks-grid" id="checks-grid-char"></div>
-
-    <div class="separator" style="margin-top:0.75rem;"><hr><span>Reading speed</span><hr></div>
-    <div class="checks-grid" id="checks-grid-rs"></div>
-
     <div class="controls-row">
       <button class="btn btn-primary" id="run-btn" onclick="runChecks()" disabled>Run checks</button>
       <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
@@ -180,31 +168,30 @@
 
 <script>
 const CHECKS = [
-  { id:'gap2',    group:'timing', label:'Min 2-frame gap', defaultOn:true },
-  { id:'mindur20',group:'timing', label:'Min duration 20 frames', defaultOn:true },
-  { id:'maxdur6s', group:'timing', label:'Max duration 6 seconds', defaultOn:false },
-  { id:'mindur1s', group:'timing', label:'Min duration 1 second', defaultOn:false },
-  { id:'maxdur8s', group:'timing', label:'Max duration of 8 seconds', defaultOn:false },
-  { id:'curlya',  group:'text',   label:"Curly apostrophe", defaultOn:true },
-  { id:'hypcon',  group:'text',   label:'Hyphen for 2 speakers', defaultOn:true },
-  { id:'hyp_nospace', group:'text', label:'No spacing after hyphen', defaultOn:false },
-  { id:'hyp_space',   group:'text', label:'Spacing after hyphen', defaultOn:false },
-  { id:'multispc',group:'text',   label:'Multiple spaces', defaultOn:true },
-  { id:'emptyline',group:'text',  label:'Empty line', defaultOn:true },
-  { id:'leadtrail',group:'text',  label:'Leading/trailing space', defaultOn:true },
-  { id:'doublehyp',group:'text',  label:'Double hyphens', defaultOn:true },
-  { id:'dotseq',  group:'text',   label:'2 or 4+ dot', defaultOn:true },
-  { id:'comma_end',group:'text',  label:'End line comma', defaultOn:true },
-  { id:'char37',  group:'char',   label:'Character limit: 37', defaultOn:false },
-  { id:'char42',  group:'char',   label:'Character limit: 42', defaultOn:false },
-  { id:'maxlines2',group:'char',  label:'Maximum 2 lines', defaultOn:true },
-  { id:'mergeable',group:'char',  label:'Fit to 1 line', defaultOn:true },
-  { id:'rs20',    group:'rs',     label:'Over 20 CPS', defaultOn:false },
-  { id:'rs30',    group:'rs',     label:'Over 30 CPS', defaultOn:true },
+  { id:'gap2', label:'Min 2-frame gap', defaultOn:true },
+  { id:'mindur20', label:'Min duration 20 frames', defaultOn:true },
+  { id:'maxdur6s', label:'Max duration 6 seconds', defaultOn:false },
+  { id:'mindur1s', label:'Min duration 1 second', defaultOn:false },
+  { id:'maxdur8s', label:'Max duration of 8 seconds', defaultOn:false },
+  { id:'curlya', label:"Curly apostrophe", defaultOn:true },
+  { id:'hypcon', label:'Hyphen for 2 speakers', defaultOn:true },
+  { id:'hyp_nospace', label:'No spacing after hyphen', defaultOn:false },
+  { id:'hyp_space', label:'Spacing after hyphen', defaultOn:false },
+  { id:'multispc', label:'Multiple spaces', defaultOn:true },
+  { id:'emptyline', label:'Empty line', defaultOn:true },
+  { id:'leadtrail', label:'Leading/trailing space', defaultOn:true },
+  { id:'doublehyp', label:'Double hyphens', defaultOn:true },
+  { id:'dotseq', label:'2 or 4+ dot', defaultOn:true },
+  { id:'comma_end', label:'End line comma', defaultOn:true },
+  { id:'char37', label:'Character limit: 37', defaultOn:false },
+  { id:'char42', label:'Character limit: 42', defaultOn:false },
+  { id:'maxlines2', label:'Maximum 2 lines', defaultOn:true },
+  { id:'mergeable', label:'Fit to 1 line', defaultOn:true },
+  { id:'rs20', label:'Over 20 CPS', defaultOn:false },
+  { id:'rs30', label:'Over 30 CPS', defaultOn:true },
 ];
 
 function buildCheckboxes() {
-  const groups = { timing:'checks-grid-timing', text:'checks-grid-text', char:'checks-grid-char', rs:'checks-grid-rs' };
   CHECKS.forEach((c, i) => {
     const grid = document.getElementById(groups[c.group]);
     const div = document.createElement('label');
