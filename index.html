@@ -117,6 +117,7 @@
     </div>
   </div>
 
+ 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
       <div class="card-title" style="margin:0;">Checks to run</div>
@@ -125,7 +126,8 @@
         <button class="toggle-all" onclick="toggleAll(false)">Deselect all</button>
       </div>
     </div>
-
+ 
+    <div class="checks-grid" id="checks-grid"></div> 
     <div class="controls-row">
       <button class="btn btn-primary" id="run-btn" onclick="runChecks()" disabled>Run checks</button>
       <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
@@ -192,8 +194,10 @@ const CHECKS = [
 ];
 
 function buildCheckboxes() {
+  const grid = document.getElementById('checks-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
   CHECKS.forEach((c, i) => {
-    const grid = document.getElementById(groups[c.group]);
     const div = document.createElement('label');
     div.className = 'check-item';
     div.innerHTML = `<input type="checkbox" id="chk_${c.id}" ${c.defaultOn?'checked':''}><span class="check-num">${i+1}.</span><span class="check-label">${c.label}</span>`;
