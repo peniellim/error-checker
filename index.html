@@ -14,15 +14,12 @@
     .page { max-width: 1200px; margin: 0 auto; padding: 2rem; }
     .card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     h1 { font-size: 22px; margin-bottom: 1rem; }
-    
     .upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; background: #fafafa; transition: 0.2s; }
     .upload-area:hover { border-color: #5c5fef; background: #f0f0ff; }
     .upload-area input { display: none; }
-    
     .btn { padding: 0.6rem 1.4rem; border-radius: 8px; font-weight: 500; cursor: pointer; border: none; transition: 0.2s; }
     .btn-primary { background: #5c5fef; color: #fff; }
     .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 13px; }
     th { text-align: left; padding: 10px; background: #f8f8f8; border-bottom: 2px solid #eee; }
     td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
@@ -30,7 +27,7 @@
     .etag { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: 600; margin: 2px; border: 0.5px solid #f87171; }
     .etag.mixed { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
     .etag.foreign { background: #f3e8ff; color: #6b21a8; border-color: #a855f7; }
-    .loader-msg { color: #5c5fef; font-weight: 600; margin-bottom: 10px; display: none; }
+    #loading-status { color: #5c5fef; font-weight: 600; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -39,8 +36,8 @@
   <h1>Subtitle Professional Spellchecker</h1>
   
   <div class="card">
-    <div id="loading-status" class="loader-msg">Initializing Dictionary...</div>
-    <div class="upload-area" id="drop-zone">
+    <div id="loading-status">Loading Dictionary...</div>
+    <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
       <input type="file" id="file-input" accept=".xlsx,.xls">
       <div style="font-size: 30px;">📂</div>
       <p>Drop Excel file here or <strong>browse</strong></p>
@@ -55,7 +52,7 @@
 
   <div id="results-area" style="display:none;">
     <div class="card">
-      <div id="stats"></div>
+      <div id="stats" style="margin-bottom:10px;"></div>
       <table>
         <thead>
           <tr><th>Row</th><th>Dialogue</th><th>Issues Found</th></tr>
@@ -70,24 +67,27 @@
 let typoChecker = null;
 let workbook = null;
 
-const affUrl = "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/en-US/index.aff";
-const dicUrl = "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/en-US/index.dic";
-
+// Using a more reliable combined dictionary source
 async function loadDictionary() {
   const status = document.getElementById('loading-status');
-  status.style.display = 'block';
   try {
+    const affUrl = "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/en-US/index.aff";
+    const dicUrl = "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/en-US/index.dic";
+
     const [affData, dicData] = await Promise.all([
       fetch(affUrl).then(res => res.text()),
       fetch(dicUrl).then(res => res.text())
     ]);
+
     typoChecker = new Typo("en_US", affData, dicData);
-    status.innerText = "✅ Dictionary Ready";
-    setTimeout(() => status.style.display = 'none', 2000);
+    status.innerHTML = "✅ Dictionary Ready";
+    console.log("Dictionary loaded successfully");
   } catch (e) {
-    status.innerText = "❌ Error loading dictionary";
+    status.innerHTML = "❌ Error loading dictionary. Check internet connection.";
+    console.error(e);
   }
 }
+
 loadDictionary();
 
 const fileInput = document.getElementById('file-input');
@@ -97,18 +97,25 @@ fileInput.onchange = (e) => {
   document.getElementById('file-name').innerText = file.name;
   const reader = new FileReader();
   reader.onload = (event) => {
-    workbook = XLSX.read(event.target.result, { type: 'array' });
-    document.getElementById('run-btn').disabled = false;
+    try {
+      workbook = XLSX.read(event.target.result, { type: 'array' });
+      document.getElementById('run-btn').disabled = false;
+      console.log("Excel loaded");
+    } catch (err) {
+      alert("Error reading Excel file.");
+    }
   };
   reader.readAsArrayBuffer(file);
 };
 
 function runChecks() {
-  if (!typoChecker) return alert("Dictionary still loading...");
+  if (!typoChecker) return alert("Dictionary is still downloading. Please wait.");
+  
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-  const data = rows.slice(1); 
   
+  // Note: Adjust slice(1) if your file doesn't have a header row
+  const data = rows.slice(1); 
   const resultsBody = document.getElementById('results-body');
   resultsBody.innerHTML = '';
   document.getElementById('results-area').style.display = 'block';
@@ -116,27 +123,31 @@ function runChecks() {
   let errorCount = 0;
 
   data.forEach((row, index) => {
+    // Check Column E (Index 4)
     const text = String(row[4] || '').trim();
     if (!text) return;
 
     let issues = [];
 
-    // 1. Check for Non-English Characters (Anything not Latin-1, Basic Punctuation, or numbers)
-    // This flags characters like 한글, characters with unexpected accents, or weird symbols.
+    // 1. Foreign Characters
     const foreignMatches = text.match(/[^\x00-\x7F]+/g);
     if (foreignMatches) {
-      foreignMatches.forEach(char => issues.push({type: 'foreign', val: `Non-English: ${char}`}));
+      foreignMatches.forEach(char => {
+        issues.push({type: 'foreign', val: `Non-English: ${char}`});
+      });
     }
 
-    // Clean for word-based checking
-    const words = text.replace(/[0-9]/g, '').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, " ").split(/\s+/);
+    // 2. Spelling and Mixed Case
+    // We replace punctuation with spaces so we don't break words like "don't" (handled by Typo.js usually)
+    // but we strip basic symbols for clean checking.
+    const cleanWords = text.replace(/[0-9]/g, '').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, " ").split(/\s+/);
 
-    words.forEach(word => {
+    cleanWords.forEach(word => {
       if (word.length > 1) {
-        // 2. Check for Random Capitalization (e.g., THis, tEXT)
+        // Mixed Case Check
         const isMixed = /[a-z][A-Z]/.test(word) || /^[A-Z]{2,}[a-z]/.test(word);
         
-        // 3. Check Spelling (Force check ALL CAPS by lowercasing)
+        // Spelling Check (all-caps handled as lowercase)
         const isSpelledCorrectly = typoChecker.check(word.toLowerCase());
 
         if (isMixed) {
@@ -144,7 +155,6 @@ function runChecks() {
         }
         
         if (!isSpelledCorrectly) {
-          // Avoid double-flagging if it's already a Mixed Case error
           if (!isMixed) {
             issues.push({type: 'typo', val: `Typo: ${word}`});
           }
