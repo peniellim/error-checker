@@ -40,16 +40,34 @@
   .stat-box { background: #f5f5f0; border-radius: 8px; padding: 0.6rem 1rem; min-width: 120px; }
   .stat-box .val { font-size: 20px; font-weight: 600; }
   .stat-box .lbl { font-size: 12px; color: #888; }
-  .stat-box.err { border-left: 4px solid #c0392b; }
   .stat-box.err .val { color: #c0392b; }
+  .stat-box.warn .val { color: #d97706; }
+  .stat-box.ok .val { color: #16a34a; }
   #results-area { display: none; }
   .results-table-wrap { overflow-x: auto; border-radius: 10px; border: 0.5px solid #ddd; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th { background: #f5f5f0; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; color: #666; border-bottom: 0.5px solid #ddd; }
+  thead th { background: #f5f5f0; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; font-size: 12px; color: #666; border-bottom: 0.5px solid #ddd; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
   tbody td { padding: 0.55rem 0.75rem; border-bottom: 0.5px solid #eee; vertical-align: top; }
-  tr.has-error { background: #fff8e1; }
-  .etag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: #fde8e8; color: #c0392b; border: 0.5px solid #f5c6c6; margin: 2px; }
-  .dialogue-cell { white-space: pre-wrap; max-width: 360px; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.has-error { background: #fff8e1; }
+  tbody tr.has-error:hover { background: #fff3cd; }
+  tbody tr:not(.has-error):hover { background: #fafafa; }
+  .error-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .etag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: #fde8e8; color: #c0392b; border: 0.5px solid #f5c6c6; white-space: nowrap; }
+  .dialogue-cell { white-space: pre-wrap; max-width: 360px; word-break: break-word; }
+  .no-errors { text-align: center; padding: 3rem; color: #888; }
+  .no-errors .big { font-size: 32px; margin-bottom: 0.5rem; }
+  .filter-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filter-row label { font-size: 13px; color: #555; }
+  .filter-row select { font-size: 13px; }
+  .toggle-all { font-size: 13px; color: #5c5fef; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+  .hint { font-size: 12px; color: #aaa; margin-top: 0.25rem; }
+  .ts { font-family: monospace; font-size: 12px; color: #555; white-space: nowrap; }
+  .rs { font-size: 12px; }
+  @media (max-width: 700px) {
+    .checks-grid { grid-template-columns: 1fr; }
+    .row { flex-direction: column; }
+  }
 </style>
 </head>
 <body>
@@ -86,7 +104,13 @@
   </div>
 
   <div class="card">
-    <div class="card-title">Checks to run</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div class="card-title" style="margin:0;">Checks to run</div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="toggle-all" onclick="toggleAll(true)">Select all</button>
+        <button class="toggle-all" onclick="toggleAll(false)">Deselect all</button>
+      </div>
+    </div>
     <div class="checks-grid" id="checks-grid"></div> 
     <div class="controls-row">
       <button class="btn btn-primary" id="run-btn" onclick="runChecks()" disabled>Run checks</button>
@@ -95,8 +119,15 @@
   </div>
 
   <div id="results-area">
-    <div class="card">
+    <div class="card" style="padding:1rem 1.5rem;">
       <div class="stats-row" id="stats-row"></div>
+      <div class="filter-row">
+        <label>Filter:</label>
+        <select id="filter-select" onchange="applyFilter()">
+          <option value="all">Show all rows</option>
+          <option value="errors">Errors only</option>
+        </select>
+      </div>
       <div class="results-table-wrap">
         <table id="results-table">
           <thead>
@@ -120,18 +151,21 @@
 <script>
 const CHECKS = [
   { id:'emptyline', label:'Empty dialogue (Col E)', defaultOn:true },
-  { id:'no_punct', label:'No ending punctuation', defaultOn:true },
   { id:'comma_detect', label:'Last line ends with comma', defaultOn:true },
   { id:'char37', label:'Character limit: 37', defaultOn:true },
   { id:'char42', label:'Character limit: 42', defaultOn:true },
   { id:'gap2', label:'Min 2-frame gap', defaultOn:true },
   { id:'overlap', label:'Subtitle Overlaps', defaultOn:true },
+  { id:'mindur20', label:'Min duration 20 frames', defaultOn:true },
   { id:'curlya', label:"Curly apostrophe", defaultOn:true },
   { id:'multispc', label:'Multiple spaces', defaultOn:true },
-  { id:'maxlines2', label:'Maximum 2 lines', defaultOn:true }
+  { id:'leadtrail', label:'Leading/trailing space', defaultOn:true },
+  { id:'maxlines2', label:'Maximum 2 lines', defaultOn:true },
+  { id:'rs30', label:'Over 30 CPS', defaultOn:true },
 ];
 
 let workbook = null;
+window._tableData = [];
 
 function buildCheckboxes() {
   const grid = document.getElementById('checks-grid');
@@ -146,6 +180,7 @@ function buildCheckboxes() {
   });
 }
 
+function toggleAll(on) { CHECKS.forEach(c => { document.getElementById('chk_'+c.id).checked = on; }); }
 function isChecked(id) { return document.getElementById('chk_'+id)?.checked; }
 function stripTags(text) { return String(text||'').replace(/<\/?[^>]+(>|$)/g, ""); }
 function getLines(text) { return text ? String(text).split(/\r?\n/) : []; }
@@ -175,6 +210,7 @@ function runChecks() {
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const raw = XLSX.utils.sheet_to_json(sheet, { header:1, defval:'' });
   const rows = raw.slice(skip);
+  const allErrorsSet = new Set();
 
   const processed = rows.map((row, idx) => {
     const dialogue = row[4] != null ? String(row[4]) : '';
@@ -189,62 +225,65 @@ function runChecks() {
 
   processed.forEach((r, i) => {
     const lines = getLines(r.dialogue);
-    const fullTrim = r.dialogue.trim();
-
-    if (isChecked('emptyline') && !fullTrim) {
-      r.errors.push('Empty dialogue');
+    
+    // Empty Line
+    if (isChecked('emptyline') && (!r.dialogue || r.dialogue.trim()==='')) {
+      r.errors.push('Empty dialogue'); allErrorsSet.add('Empty dialogue');
     }
 
-    if (lines.length > 0 && fullTrim !== '') {
-      const lastLine = lines[lines.length - 1].trimEnd();
-      
-      // COMMA DETECTOR
-      if (isChecked('comma_detect') && lastLine.endsWith(',')) {
-        r.errors.push('Ends with comma');
+    if (lines.length > 0 && r.dialogue.trim()!=='') {
+      // Comma Detect
+      if (isChecked('comma_detect') && lines[lines.length-1].trimEnd().endsWith(',')) {
+        r.errors.push('Ends with comma'); allErrorsSet.add('Trailing comma');
       }
 
-      // NO ENDING PUNCTUATION CHECK
-      if (isChecked('no_punct')) {
-        const lastChar = lastLine.slice(-1);
-        // Checks if last char is NOT . ! or ?
-        if (!/[.!?]/.test(lastChar)) {
-          r.errors.push('No punctuation');
-        }
-      }
-
+      // SEPARATE CHARACTER LIMIT CHECKS
       const maxLineLen = Math.max(...lines.map(l => stripTags(l).length));
-      if (isChecked('char37') && maxLineLen > 37) r.errors.push(`Over 37ch (${maxLineLen})`);
-      if (isChecked('char42') && maxLineLen > 42) r.errors.push(`Over 42ch (${maxLineLen})`);
-      if (isChecked('maxlines2') && lines.length > 2) r.errors.push(`Lines: ${lines.length}`);
+      
+      if (isChecked('char37') && maxLineLen > 37) {
+        r.errors.push(`Over 37ch (${maxLineLen})`); allErrorsSet.add('Char limit 37');
+      }
+      if (isChecked('char42') && maxLineLen > 42) {
+        r.errors.push(`Over 42ch (${maxLineLen})`); allErrorsSet.add('Char limit 42');
+      }
+
+      if (isChecked('curlya') && /[\u2018\u2019]/.test(r.dialogue)) { r.errors.push('Curly apostrophe'); allErrorsSet.add('Curly apostrophe'); }
+      if (isChecked('multispc') && /  +/.test(r.dialogue)) { r.errors.push('Multiple spaces'); allErrorsSet.add('Multiple spaces'); }
+      if (isChecked('leadtrail') && lines.some(l => l !== l.trim())) { r.errors.push('Lead/trail space'); allErrorsSet.add('Leading/trailing space'); }
+      if (isChecked('maxlines2') && lines.length > 2) { r.errors.push(`Lines: ${lines.length}`); allErrorsSet.add('Too many lines'); }
     }
 
+    // Timing
     if (i < processed.length - 1) {
       const gap = processed[i+1].startF - r.endF;
-      if (isChecked('overlap') && gap < 0) r.errors.push('Overlap');
-      else if (isChecked('gap2') && gap >= 0 && gap < 2) r.errors.push('Gap < 2f');
+      if (isChecked('overlap') && gap < 0) { r.errors.push('Overlap'); allErrorsSet.add('Overlap'); }
+      else if (isChecked('gap2') && gap >= 0 && gap < 2) { r.errors.push('Gap < 2f'); allErrorsSet.add('Gap < 2 frames'); }
     }
+    if (isChecked('mindur20') && (r.endF-r.startF) < 20) { r.errors.push('Short < 20f'); allErrorsSet.add('Duration < 20 frames'); }
+    if (isChecked('rs30') && parseFloat(r.rs) > 30) { r.errors.push('CPS > 30'); allErrorsSet.add('Reading speed > 30'); }
   });
 
+  window._tableData = processed;
   renderResults(processed);
 }
 
 function renderResults(data) {
   document.getElementById('results-area').style.display = 'block';
+  applyFilter();
+}
+
+function applyFilter() {
+  const filter = document.getElementById('filter-select').value;
   const tbody = document.getElementById('results-body');
   tbody.innerHTML = '';
-  const errorRows = data.filter(r => r.errors.length > 0);
+  const visible = filter === 'errors' ? window._tableData.filter(r=>r.errors.length>0) : window._tableData;
 
-  document.getElementById('stats-row').innerHTML = `
-    <div class="stat-box"><div class="val">${data.length}</div><div class="lbl">Total Rows</div></div>
-    <div class="stat-box err"><div class="val">${errorRows.length}</div><div class="lbl">Error Rows</div></div>
-  `;
-
-  data.forEach((r, idx) => {
+  visible.forEach((r, idx) => {
     const tr = document.createElement('tr');
     if (r.errors.length > 0) tr.classList.add('has-error');
     tr.innerHTML = `<td>${idx+1}</td><td>${r.rowNum}</td><td>${r.startTs}</td><td>${r.endTs}</td>
                     <td class="dialogue-cell">${getLines(r.dialogue).join('<br>')}</td><td>${r.rs}</td>
-                    <td>${r.errors.map(e=>`<span class="etag">${e}</span>`).join('')}</td>`;
+                    <td><div class="error-tags">${r.errors.map(e=>`<span class="etag">${e}</span>`).join('')}</div></td>`;
     tbody.appendChild(tr);
   });
 }
