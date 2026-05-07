@@ -316,18 +316,15 @@ function runChecks() {
     if (lines.length > 0) {
       const cleanDialogue = stripTags(r.dialogue).trim();
 
-// 3. Ending Punctuation Check (Revised)
-if (isChecked('end_punct')) {
-  // This regex checks if the last character is a period, comma, question mark, 
-  // exclamation mark, or a closing parenthesis.
-  const validPunctRegex = /[.,?!)]$]/;
-  
-  // We trim the clean dialogue to ensure trailing spaces don't cause a false positive
-  if (!validPunctRegex.test(cleanDialogue)) {
-    errs.push('No ending punctuation');
-    allErrorsSet.add('Missing ending punctuation');
-  }
-}
+      // Ending Punctuation Check - Updated Logic
+      if (isChecked('end_punct')) {
+        // Valid if last character is . , ? ! or )
+        const validPunctRegex = /[.,?!)]$]/;
+        if (!validPunctRegex.test(cleanDialogue)) {
+          errs.push('No ending punctuation');
+          allErrorsSet.add('Missing ending punctuation');
+        }
+      }
 
       // Character Limit Check
       if (activeLimit > 0) {
