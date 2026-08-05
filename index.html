@@ -195,9 +195,11 @@ const CHECKS = [
   { id: 'gen_mergeable',  group: 'General', label: 'Fit to 1 line (mergeable)', defaultOn: true },
   { id: 'gen_maxlines2',  group: 'General', label: 'Maximum 2 lines', defaultOn: true },
   { id: 'gen_hypcon',     group: 'General', label: 'Hyphen for 2 speakers', defaultOn: true },
+  { id: 'gen_ampm',       group: 'General', label: 'Time: a.m./p.m. with space', defaultOn: true },
 
   // --- GROUP 2: COUPANG ---
   { id: 'coup_mindur20',  group: 'Coupang', label: 'Min duration 20 frames', defaultOn: true },
+  { id: 'coup_mindur25',  group: 'Coupang', label: 'Min duration 25 frames', defaultOn: true },
   { id: 'coup_maxdur6s',  group: 'Coupang', label: 'Max duration 6 seconds', defaultOn: true },
   { id: 'coup_hyp_space', group: 'Coupang', label: 'Spacing after hyphen', defaultOn: true },
   { id: 'coup_char42',    group: 'Coupang', label: 'Character limit: 42', defaultOn: true },
@@ -220,6 +222,7 @@ const CHECKS = [
   { id: 'pccw_maxline1',  group: 'PCCW',    label: 'Maximum 1 line', defaultOn: true },
   { id: 'pccw_noitalics', group: 'PCCW',    label: 'No italics', defaultOn: true },
   { id: 'pccw_end_punct', group: 'PCCW',    label: 'Ending punctuation', defaultOn: true },
+  { id: 'pccw_ampm',      group: 'PCCW', label: 'Time: am/pm without space', defaultOn: true },
 
   // --- GROUP 5: CJENM (Empty for now) ---
 
@@ -375,6 +378,7 @@ function runChecks() {
     // --- DURATION INCLUSIVE CHECKS ---
     if (durF != null && durS != null) {
       if (isChecked('coup_mindur20') && durF < 20) { errs.push(`Coupang Short: < 20f`); allErrorsSet.add('Coupang Short (< 20f)'); }
+      if (isChecked('coup_mindur25') && durF < 25) { errs.push(`Coupang Short: < 25f`); allErrorsSet.add('Coupang Short (< 25f)'); }
       if (isChecked('wbd_mindur1s') && durS < 1.0) { errs.push(`WBD Short: < 1s`); allErrorsSet.add('WBD Short (< 1s)'); }
       if (isChecked('pccw_mindur1s') && durS < 1.0) { errs.push(`PCCW Short: < 1s`); allErrorsSet.add('PCCW Short (< 1s)'); }
       if (isChecked('net_mindur1s') && durS < 1.0) { errs.push(`Netflix Short: < 1s`); allErrorsSet.add('Netflix Short (< 1s)'); }
@@ -402,6 +406,22 @@ function runChecks() {
         const bad = dots.filter(s => s.length !== 3);
         if (bad.length > 0) { errs.push(`Dots: ${bad.join(',')}`); allErrorsSet.add('Invalid dot sequence'); }
       }
+            if (isChecked('gen_ampm')) {
+        const text = stripTags(r.dialogue);
+        const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/g) || [];
+
+        matches.forEach(t => {
+          const correct = t.replace(/\s*(a\.?m\.?|p\.?m\.?)$/i, (m, x) => {
+            return ' ' + (x.toLowerCase().replace(/\./g,'') === 'am' ? 'a.m.' : 'p.m.');
+          });
+
+          if (t !== correct) {
+            errs.push(`Incorrect a.m./p.m. format: ${t}`);
+            allErrorsSet.add('Incorrect a.m./p.m. format');
+          }
+        });
+      }
+      
 
       // Line Limits
       if (isChecked('gen_maxlines2') && lines.length > 2) { errs.push(`Lines: ${lines.length}`); allErrorsSet.add('Too many lines'); }
@@ -465,6 +485,17 @@ function runChecks() {
       // Style Mechanics
       if (isChecked('pccw_noitalics') && /<i>|<\/i>/i.test(r.dialogue)) {
         errs.push('PCCW Italics detected'); allErrorsSet.add('PCCW Italics forbidden');
+      }
+           if (isChecked('pccw_ampm')) {
+        const text = stripTags(r.dialogue);
+        const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/g) || [];
+
+        matches.forEach(t => {
+          if (!/^\d{1,2}(?::\d{2})?(am|pm)$/.test(t)) {
+            errs.push(`PCCW time format error: ${t}`);
+            allErrorsSet.add('PCCW am/pm format');
+          }
+        });
       }
     }
 
