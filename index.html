@@ -406,21 +406,28 @@ function runChecks() {
         const bad = dots.filter(s => s.length !== 3);
         if (bad.length > 0) { errs.push(`Dots: ${bad.join(',')}`); allErrorsSet.add('Invalid dot sequence'); }
       }
-            if (isChecked('gen_ampm')) {
-        const text = stripTags(r.dialogue);
-        const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/g) || [];
+if (isChecked('gen_ampm')) {
+  const text = stripTags(r.dialogue);
 
-        matches.forEach(t => {
-          const correct = t.replace(/\s*(a\.?m\.?|p\.?m\.?)$/i, (m, x) => {
-            return ' ' + (x.toLowerCase().replace(/\./g,'') === 'am' ? 'a.m.' : 'p.m.');
-          });
+  const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi) || [];
 
-          if (t !== correct) {
-            errs.push(`Incorrect a.m./p.m. format: ${t}`);
-            allErrorsSet.add('Incorrect a.m./p.m. format');
-          }
-        });
+  matches.forEach(t => {
+    const normalized = t.replace(/\s+/g, ' ').trim();
+
+    const correct = normalized.replace(
+      /\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
+      (m, x) => {
+        const period = x.toLowerCase().replace(/\./g, '').replace(/\s/g, '');
+        return ' ' + (period === 'am' ? 'a.m.' : 'p.m.');
       }
+    );
+
+    if (normalized !== correct) {
+      errs.push(`Incorrect a.m./p.m. format: ${t}`);
+      allErrorsSet.add('Incorrect a.m./p.m. format');
+    }
+  });
+}
       
 
       // Line Limits
