@@ -195,6 +195,7 @@ const CHECKS = [
   { id: 'gen_mergeable',  group: 'General', label: 'Fit to 1 line (mergeable)', defaultOn: true },
   { id: 'gen_maxlines2',  group: 'General', label: 'Maximum 2 lines', defaultOn: true },
   { id: 'gen_hypcon',     group: 'General', label: 'Hyphen for 2 speakers', defaultOn: true },
+  { id: 'gen_numtreat',   group: 'General', label: 'Number treatment', defaultOn: true },
   { id: 'gen_ampm',       group: 'General', label: 'Time: a.m./p.m. with space', defaultOn: true },
 
   // --- GROUP 2: COUPANG ---
@@ -299,6 +300,130 @@ function tsToFrames(val, fps) {
 
 function framesToSec(frames, fps) { return frames / fps; }
 function getLines(text) { return text ? String(text).split(/\r?\n/) : []; }
+ const SMALL_NUMBERS = {
+  zero:0, one:1, two:2, three:3, four:4, five:5,
+  six:6, seven:7, eight:8, nine:9, ten:10,
+  eleven:11, twelve:12, thirteen:13, fourteen:14,
+  fifteen:15, sixteen:16, seventeen:17, eighteen:18,
+  nineteen:19
+};
+
+const TENS = {
+  twenty:20, thirty:30, forty:40, fifty:50,
+  sixty:60, seventy:70, eighty:80, ninety:90
+};
+
+const SCALES = {
+  hundred:100,
+  thousand:1000,
+  million:1000000,
+  billion:1000000000
+};
+
+
+function wordNumberToValue(words) {
+  words = words
+    .toLowerCase()
+    .replace(/-/g,' ')
+    .replace(/\band\b/g,' ')
+    .trim()
+    .split(/\s+/);
+
+  let total = 0;
+  let current = 0;
+  let found = false;
+
+  for (const w of words) {
+
+    if (SMALL_NUMBERS[w] !== undefined) {
+      current += SMALL_NUMBERS[w];
+      found = true;
+    }
+
+    else if (TENS[w]) {
+      current += TENS[w];
+      found = true;
+    }
+
+    else if (w === 'hundred') {
+      current *= 100;
+      found = true;
+    }
+
+    else if (SCALES[w]) {
+      total += current * SCALES[w];
+      current = 0;
+      found = true;
+    }
+
+    else {
+      return null;
+    }
+  }
+
+  return found ? total + current : null;
+}
+
+
+function isWrittenNumber(wordGroup) {
+  return wordNumberToValue(wordGroup) !== null;
+}
+
+
+function numberWordsRegex() {
+
+  const nums = [
+    ...Object.keys(SMALL_NUMBERS),
+    ...Object.keys(TENS),
+    ...Object.keys(SCALES),
+    'and'
+  ];
+
+  return new RegExp(
+    '\\b(' +
+    nums.join('|') +
+    ')(?:[- ](?:' +
+    nums.join('|') +
+    '))*\\b',
+    'gi'
+  );
+}
+
+
+function isMetricContext(text, index) {
+
+  const after = text.slice(index).match(
+    /^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i
+  );
+
+  return !!after;
+}
+
+
+function isTimeContext(text, index) {
+
+  const after = text.slice(index);
+
+  return (
+    /^\s*(am|pm)\b/i.test(after) ||
+    /^\s*o'clock\b/i.test(after)
+  );
+}
+
+
+function isProtectedName(text, match) {
+
+  const protectedPatterns = [
+    /apollo\s+\d+/i,
+    /catch-\d+/i,
+    /room\s+\d+/i,
+    /formula\s+\d+/i
+  ];
+
+  return protectedPatterns.some(
+    r => r.test(match)
+  );
+}
 
 function setupDrop() {
   const dz = document.getElementById('drop-zone');
@@ -429,7 +554,132 @@ if (isChecked('gen_ampm')) {
   });
 }
       
+// Number Treatment
+if (isChecked('gen_numtreat')) {
 
+  const text = stripTags(r.dialogue);
+
+  // Digit numbers
+  const digitMatches = [
+    ...text.matchAll(/\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)
+  ];
+
+
+  digitMatches.forEach(m => {
+
+    const value = parseInt(
+      m[0].replace(/,/g,'').replace(/[^\d]/g,'')
+    );
+
+    const index = m.index;
+
+    if (isProtectedName(text, m[0])) {
+      return;
+    }
+
+
+    // Metric exception
+    if (isMetricContext(text, index)) {
+      return;
+    }
+
+
+    // Time exceptions
+    if (isTimeContext(text, index)) {
+
+      if (/o'clock/i.test(text.slice(index))) {
+        errs.push(`Number should be spelled out: ${m[0]} o'clock`);
+        allErrorsSet.add('Number treatment');
+      }
+
+      return;
+    }
+
+
+    // First word exception
+    const before = text.slice(0,index).trim();
+
+    if (before === '') {
+
+      errs.push(`First word number must be spelled out: ${m[0]}`);
+      allErrorsSet.add('Number treatment');
+
+      return;
+    }
+
+
+    // 1-10 must not be digits
+    if (value >= 1 && value <= 10) {
+
+      errs.push(`1-10 must be spelled out: ${m[0]}`);
+      allErrorsSet.add('Number treatment');
+
+    }
+
+  });
+
+
+
+  // Written numbers
+  const wordMatches = [
+    ...text.matchAll(numberWordsRegex())
+  ];
+
+
+  wordMatches.forEach(m=>{
+
+    const value = wordNumberToValue(m[0]);
+
+    if (value === null) return;
+
+
+    const index = m.index;
+
+
+    // Time "five o'clock"
+    if (/^\s*o'clock/i.test(
+      text.slice(index + m[0].length)
+    )) {
+      return;
+    }
+
+
+    // First word exception
+    const before =
+      text.slice(0,index).trim();
+
+
+    if (before === '') {
+      return;
+    }
+
+
+    // Metric exception
+    if (
+      isMetricContext(
+        text,
+        index + m[0].length
+      )
+    ) {
+      return;
+    }
+
+
+    // 11+ must be digits
+    if (value >= 11) {
+
+      errs.push(
+        `11+ must use numerals: ${m[0]}`
+      );
+
+      allErrorsSet.add(
+        'Number treatment'
+      );
+    }
+
+  });
+
+}
       // Line Limits
       if (isChecked('gen_maxlines2') && lines.length > 2) { errs.push(`Lines: ${lines.length}`); allErrorsSet.add('Too many lines'); }
       if (isChecked('pccw_maxline1') && lines.length > 1) { errs.push(`PCCW Lines: ${lines.length}`); allErrorsSet.add('PCCW Exceeded 1 line'); }
