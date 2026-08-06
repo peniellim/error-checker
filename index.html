@@ -538,18 +538,7 @@ if (isChecked('gen_ampm')) {
   ) || [];
 
   matches.forEach(t => {
-    const normalized = t.replace(/\s+/g, ' ').trim();
-
-    const correct = normalized.replace(
-      /\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
-      (m, x) => {
-        const period = x.toLowerCase().replace(/\./g, '').replace(/\s/g, '');
-        return ' ' + (period === 'am' ? 'a.m.' : 'p.m.');
-      }
-    );
-
-    // Compare case-insensitively so A.M./P.M. are accepted
-    if (normalized.toLowerCase() !== correct.toLowerCase()) {
+    if (!/^\d{1,2}(?::\d{2})?\s(?:[AaPp]\.?[Mm]\.?)$/.test(t.trim())) {
       errs.push(`Incorrect a.m./p.m. format: ${t}`);
       allErrorsSet.add('Incorrect a.m./p.m. format');
     }
