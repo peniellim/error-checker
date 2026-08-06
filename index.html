@@ -533,7 +533,9 @@ function runChecks() {
 if (isChecked('gen_ampm')) {
   const text = stripTags(r.dialogue);
 
-  const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi) || [];
+  const matches = text.match(
+    /\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
+  ) || [];
 
   matches.forEach(t => {
     const normalized = t.replace(/\s+/g, ' ').trim();
@@ -546,7 +548,8 @@ if (isChecked('gen_ampm')) {
       }
     );
 
-    if (normalized !== correct) {
+    // Compare case-insensitively so A.M./P.M. are accepted
+    if (normalized.toLowerCase() !== correct.toLowerCase()) {
       errs.push(`Incorrect a.m./p.m. format: ${t}`);
       allErrorsSet.add('Incorrect a.m./p.m. format');
     }
