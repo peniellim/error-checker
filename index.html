@@ -401,12 +401,11 @@ function isMetricContext(text, index) {
 
 
 function isTimeContext(text, index) {
-
   const after = text.slice(index);
 
   return (
-    /^\s*(am|pm)\b/i.test(after) ||
-    /^\s*o'clock\b/i.test(after)
+    /^\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i.test(after) ||
+    /^\s*o['’]?clock\b/i.test(after)
   );
 }
 
