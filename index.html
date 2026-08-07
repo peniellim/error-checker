@@ -529,7 +529,7 @@ function runChecks() {
       if (isChecked('gen_dotseq')) {
         const dots = r.dialogue.match(/\.{2,}/g) || [];
         const bad = dots.filter(s => s.length !== 3);
-        if (bad.length > 0) { errs.push(`Dots: ${bad.join(',')}`); allErrorsSet.add('Invalid dot sequence'); }
+        if (bad.length > 0) { errs.push(`Dots: ${bad.join(',')}`); allErrorsSet.add('Incorrect ellipsis'); }
       }
 if (isChecked('gen_ampm')) {
   const text = stripTags(r.dialogue);
@@ -541,8 +541,8 @@ if (isChecked('gen_ampm')) {
     // 5 a.m.
     // 5:30 p.m.
     if (!/^\d{1,2}(?::\d{2})?\s(?:a\.m\.|p\.m\.)$/i.test(t.trim())) {
-      errs.push(`Incorrect a.m./p.m. format: ${t}`);
-      allErrorsSet.add('Incorrect a.m./p.m. format');
+      errs.push(`Incorrect time format: ${t}`);
+      allErrorsSet.add('Incorrect time format');
     }
   });
 }
@@ -755,8 +755,8 @@ if (isChecked('gen_numtreat')) {
       const middleHyphen = /\s-\s/.test(trimmed.slice(1));
 
       if (!middleHyphen) {
-        errs.push('PCCW Missing middle hyphen separator');
-        allErrorsSet.add('PCCW Missing middle hyphen separator');
+        errs.push('PCCW Missing middle hyphen');
+        allErrorsSet.add('PCCW Missing middle hyphen');
       }
     }
   });
