@@ -63,6 +63,7 @@
   tbody tr:not(.has-error):hover { background: #fafafa; }
   .error-tags { display: flex; flex-wrap: wrap; gap: 4px; }
   .etag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: #fde8e8; color: #c0392b; border: 0.5px solid #f5c6c6; white-space: nowrap; }
+  .etag.warning { background: #e0f2ff !important; color: #0066cc !important; border: 0.5px solid #99d6ff !important; }
   .dialogue-cell { white-space: pre-wrap; max-width: 360px; word-break: break-word; }
   .no-errors { text-align: center; padding: 3rem; color: #888; }
   .no-errors .big { font-size: 32px; margin-bottom: 0.5rem; }
@@ -83,7 +84,6 @@
 <div class="page">
   <h1>Subtitle Error Checker</h1>
   <p class="subtitle-text">Upload an Excel subtitle file and select which checks to run.</p>
-
   <div class="card">
     <div class="card-title">File &amp; Settings</div>
     <div class="row">
@@ -121,7 +121,6 @@
       </div>
     </div>
   </div>
-
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
       <div class="card-title" style="margin:0;">Checks to run</div>
@@ -138,7 +137,6 @@
       <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
     </div>
   </div>
-
   <div id="results-area">
     <div class="card" style="padding:1rem 1.5rem;">
       <div class="stats-row" id="stats-row"></div>
@@ -304,7 +302,8 @@ function tsToFrames(val, fps) {
 
 function framesToSec(frames, fps) { return frames / fps; }
 function getLines(text) { return text ? String(text).split(/\r?\n/) : []; }
- const SMALL_NUMBERS = {
+
+const SMALL_NUMBERS = {
   zero:0, one:1, two:2, three:3, four:4, five:5,
   six:6, seven:7, eight:8, nine:9, ten:10,
   eleven:11, twelve:12, thirteen:13, fourteen:14,
@@ -324,7 +323,6 @@ const SCALES = {
   billion:1000000000
 };
 
-
 function wordNumberToValue(words) {
   words = words
     .toLowerCase()
@@ -338,28 +336,23 @@ function wordNumberToValue(words) {
   let found = false;
 
   for (const w of words) {
-
     if (SMALL_NUMBERS[w] !== undefined) {
       current += SMALL_NUMBERS[w];
       found = true;
     }
-
     else if (TENS[w]) {
       current += TENS[w];
       found = true;
     }
-
     else if (w === 'hundred') {
       current *= 100;
       found = true;
     }
-
     else if (SCALES[w]) {
       total += current * SCALES[w];
       current = 0;
       found = true;
     }
-
     else {
       return null;
     }
@@ -368,14 +361,11 @@ function wordNumberToValue(words) {
   return found ? total + current : null;
 }
 
-
 function isWrittenNumber(wordGroup) {
   return wordNumberToValue(wordGroup) !== null;
 }
 
-
 function numberWordsRegex() {
-
   const nums = [
     ...Object.keys(SMALL_NUMBERS),
     ...Object.keys(TENS),
@@ -393,39 +383,29 @@ function numberWordsRegex() {
   );
 }
 
-
 function isMetricContext(text, index) {
-
   const after = text.slice(index).match(
     /^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i
   );
-
   return !!after;
 }
 
-
 function isTimeContext(text, index) {
   const after = text.slice(index);
-
   return (
     /^\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i.test(after) ||
     /^\s*o['']?clock\b/i.test(after)
   );
 }
 
-
 function isProtectedName(text, match) {
-
   const protectedPatterns = [
     /apollo\s+\d+/i,
     /catch-\d+/i,
     /room\s+\d+/i,
     /formula\s+\d+/i
   ];
-
-  return protectedPatterns.some(
-    r => r.test(match)
-  );
+  return protectedPatterns.some(r => r.test(match));
 }
 
 function setupDrop() {
@@ -538,17 +518,14 @@ function runChecks() {
 // ===== STRICT gen_ampm CHECK (Group 1, Rule #11) =====
 if (isChecked('gen_ampm')) {
   const text = stripTags(r.dialogue);
-  // Match any time-like pattern: digits, optionally with :digits, then optional whitespace, then am/pm in any case
   const timePatterns = text.match(/\d{1,2}(?::\d{2})?(?:\s+)?(?:[aA]\.?[mM]\.?|[pP]\.?[mM]\.?|am|pm|AM|PM|aM|Am|pM|Pm)/gi) || [];
   
   timePatterns.forEach(match => {
-    // VALID formats ONLY: "6 a.m." or "6 A.M." or "6 p.m." or "6 P.M."
-    // (with optional colon-time like "6:30 a.m.")
     const validFormats = [
-      /^\d{1,2}(?::\d{2})?\s+a\.m\.$/,  // 6 a.m. or 6:30 a.m.
-      /^\d{1,2}(?::\d{2})?\s+A\.M\.$/,  // 6 A.M. or 6:30 A.M.
-      /^\d{1,2}(?::\d{2})?\s+p\.m\.$/,  // 6 p.m. or 6:30 p.m.
-      /^\d{1,2}(?::\d{2})?\s+P\.M\.$/   // 6 P.M. or 6:30 P.M.
+      /^\d{1,2}(?::\d{2})?\s+a\.m\.$/,
+      /^\d{1,2}(?::\d{2})?\s+A\.M\.$/,
+      /^\d{1,2}(?::\d{2})?\s+p\.m\.$/,
+      /^\d{1,2}(?::\d{2})?\s+P\.M\.$/
     ];
     
     const isValid = validFormats.some(regex => regex.test(match));
@@ -567,130 +544,47 @@ if (isChecked('gen_ampm')) {
       
 // Number Treatment
 if (isChecked('gen_numtreat')) {
-
   const text = stripTags(r.dialogue);
-
-  // Digit numbers
-  const digitMatches = [
-    ...text.matchAll(/\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)
-  ];
-
-
+  const digitMatches = [...text.matchAll(/\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)];
   digitMatches.forEach(m => {
-
-    const value = parseInt(
-      m[0].replace(/,/g,'').replace(/[^\d]/g,'')
-    );
-
+    const value = parseInt(m[0].replace(/,/g,'').replace(/[^\d]/g,''));
     const index = m.index;
-
-    if (isProtectedName(text, m[0])) {
-      return;
-    }
-
-
-    // Metric exception
-    if (isMetricContext(text, index)) {
-      return;
-    }
-
-
-    // Time exceptions
+    if (isProtectedName(text, m[0])) return;
+    if (isMetricContext(text, index)) return;
     if (isTimeContext(text, index)) {
-
       if (/o'clock/i.test(text.slice(index))) {
         errs.push(`Number should be spelled out: ${m[0]} o'clock`);
         allErrorsSet.add('Number treatment');
       }
-
       return;
     }
-
-
-    // First word exception
     const before = text.slice(0,index).trim();
-
     if (before === '') {
-
       errs.push(`First word number must be spelled out: ${m[0]}`);
       allErrorsSet.add('Number treatment');
-
       return;
     }
-
-
-    // 1-10 must not be digits
     if (value >= 1 && value <= 10) {
-
       errs.push(`1-10 must be spelled out: ${m[0]}`);
       allErrorsSet.add('Number treatment');
-
     }
-
   });
-
-
-
-  // Written numbers
-  const wordMatches = [
-    ...text.matchAll(numberWordsRegex())
-  ];
-
-
+  const wordMatches = [...text.matchAll(numberWordsRegex())];
   wordMatches.forEach(m=>{
-
     const value = wordNumberToValue(m[0]);
-
     if (value === null) return;
-
-
     const index = m.index;
-
-
-    // Time "five o'clock"
-    if (/^\s*o'clock/i.test(
-      text.slice(index + m[0].length)
-    )) {
-      return;
-    }
-
-
-    // First word exception
-    const before =
-      text.slice(0,index).trim();
-
-
-    if (before === '') {
-      return;
-    }
-
-
-    // Metric exception
-    if (
-      isMetricContext(
-        text,
-        index + m[0].length
-      )
-    ) {
-      return;
-    }
-
-
-    // 11+ must be digits
+    if (/^\s*o'clock/i.test(text.slice(index + m[0].length))) return;
+    const before = text.slice(0,index).trim();
+    if (before === '') return;
+    if (isMetricContext(text, index + m[0].length)) return;
     if (value >= 11) {
-
-      errs.push(
-        `11+ must use numerals: ${m[0]}`
-      );
-
-      allErrorsSet.add(
-        'Number treatment'
-      );
+      errs.push(`11+ must use numerals: ${m[0]}`);
+      allErrorsSet.add('Number treatment');
     }
-
   });
-
 }
+
       // Line Limits
       if (isChecked('gen_maxlines2') && lines.length > 2) { errs.push(`Lines: ${lines.length}`); allErrorsSet.add('Too many lines'); }
       if (isChecked('pccw_maxline1') && lines.length > 1) { errs.push(`PCCW Lines: ${lines.length}`); allErrorsSet.add('PCCW Exceeded 1 line'); }
@@ -754,49 +648,47 @@ if (isChecked('gen_numtreat')) {
       if (isChecked('pccw_noitalics') && /<i>|<\/i>/i.test(r.dialogue)) {
         errs.push('PCCW Italics detected'); allErrorsSet.add('PCCW Italics forbidden');
       }
+
 // ===== STRICT pccw_ampm CHECK (Group 4, Rule #7) =====
-      if (isChecked('pccw_ampm')) {
-        const text = stripTags(r.dialogue);
-        // Match any time-like pattern: digits, optionally with :digits, then optional whitespace, then am/pm in any case
-        // Use negative lookahead to exclude patterns where am/pm is followed by a period that's part of the format (like "a.m.")
-        const timePatterns = text.match(/\d{1,2}(?::\d{2})?(?:\s+)?(?:[aA]\.?[mM]\.?|[pP]\.?[mM]\.?|am|pm|AM|PM|aM|Am|pM|Pm)/gi) || [];
-        
-        timePatterns.forEach(match => {
-          // Check for ambiguous case: "6am." or "6pm." (could be format error OR sentence end)
-          if (/^\d{1,2}(?::\d{2})?(am|pm)\.$/.test(match)) {
-            errs.push(`⚠ Check incorrect time format or end of a sentence`);
-            allErrorsSet.add('PCCW Ambiguous am/pm format');
-            return; // Skip further validation for this match
-          }
-          
-          // Strip trailing period if it's a sentence-ending period (not part of format)
-          let cleanMatch = match;
-          if (cleanMatch.endsWith('.') && !cleanMatch.includes('a.m') && !cleanMatch.includes('p.m') && !cleanMatch.includes('A.M') && !cleanMatch.includes('P.M')) {
-            cleanMatch = cleanMatch.slice(0, -1);
-          }
-          
-          // VALID formats ONLY: "6am" or "6pm" (lowercase, no space, no periods)
-          // (with optional colon-time like "6:30am")
-          const validFormats = [
-            /^\d{1,2}(?::\d{2})?am$/,  // 6am or 6:30am
-            /^\d{1,2}(?::\d{2})?pm$/   // 6pm or 6:30pm
-          ];
-          
-          const isValid = validFormats.some(regex => regex.test(cleanMatch));
-          
-          if (!isValid) {
-            errs.push(`PCCW Incorrect time format`);
-            allErrorsSet.add('PCCW am/pm format');
-          }
-        });
-      }
+if (isChecked('pccw_ampm')) {
+  const text = stripTags(r.dialogue);
+  const timePatterns = text.match(/\d{1,2}(?::\d{2})?(?:\s+)?(?:[aA]\.?[mM]\.?|[pP]\.?[mM]\.?|am|pm|AM|PM|aM|Am|pM|Pm)/gi) || [];
+  
+  timePatterns.forEach(match => {
+    // Check for ambiguous case: "6am." or "6pm." (could be format error OR sentence end)
+    if (/^\d{1,2}(?::\d{2})?(am|pm)\.$/.test(match)) {
+      errs.push(`⚠ Check incorrect time format or end of a sentence`);
+      allErrorsSet.add('PCCW Ambiguous am/pm format');
+      return; // Skip further validation for this match
+    }
+    
+    // Strip trailing period if it's a sentence-ending period (not part of format)
+    let cleanMatch = match;
+    if (cleanMatch.endsWith('.') && !cleanMatch.includes('a.m') && !cleanMatch.includes('p.m') && !cleanMatch.includes('A.M') && !cleanMatch.includes('P.M')) {
+      cleanMatch = cleanMatch.slice(0, -1);
+    }
+    
+    // VALID formats ONLY: "6am" or "6pm" (lowercase, no space, no periods)
+    // (with optional colon-time like "6:30am")
+    const validFormats = [
+      /^\d{1,2}(?::\d{2})?am$/,  // 6am or 6:30am
+      /^\d{1,2}(?::\d{2})?pm$/   // 6pm or 6:30pm
+    ];
+    
+    const isValid = validFormats.some(regex => regex.test(cleanMatch));
+    
+    if (!isValid) {
+      errs.push(`PCCW Incorrect time format`);
+      allErrorsSet.add('PCCW am/pm format');
+    }
+  });
+}
+
      if (isChecked('pccw_hyp_mid')) {
   lines.forEach(line => {
     const trimmed = line.trim();
-
     if (trimmed.startsWith('-')) {
       const middleHyphen = /\s-\s/.test(trimmed.slice(1));
-
       if (!middleHyphen) {
         errs.push('PCCW Missing middle hyphen');
         allErrorsSet.add('PCCW Missing middle hyphen');
@@ -804,10 +696,10 @@ if (isChecked('gen_numtreat')) {
     }
   });
 }
+
      if (isChecked('pccw_allcaps')) {
   const clean = stripTags(r.dialogue)
     .replace(/[^A-Za-z]/g, '');
-
   if (clean.length > 0 && clean === clean.toUpperCase()) {
     errs.push('PCCW All caps');
     allErrorsSet.add('PCCW All caps');
@@ -824,10 +716,10 @@ if (isChecked('gen_numtreat')) {
       if (isChecked('net_rs30') && rsv > 30) { errs.push(`Netflix CPS > 30`); allErrorsSet.add('Netflix CPS > 30'); }
     }
   });
+
  if (isChecked('gen_credit') && processed.length > 0) {
   const last = processed[processed.length - 1];
   const text = stripTags(last.dialogue).trim();
-
   if (!/subtitle\s+translation\s+by/i.test(text)) {
     last.errors.push("Missing translator's credit");
     allErrorsSet.add("Missing translator's credit");
@@ -880,7 +772,10 @@ function applyFilter() {
   visible.forEach((r, idx) => {
     const tr = document.createElement('tr');
     if (r.errors.length > 0) tr.classList.add('has-error');
-    const tags = r.errors.map(e=>`<span class="etag">${escHtml(e)}</span>`).join('');
+    const tags = r.errors.map(e => {
+      const isWarning = e.includes('Check incorrect time format or end of a sentence');
+      return `<span class="etag${isWarning ? ' warning' : ''}">${escHtml(e)}</span>`;
+    }).join('');
     tr.innerHTML = `
       <td class="row-num">${idx+1}</td>
       <td class="row-num">${r.rowNum}</td>
