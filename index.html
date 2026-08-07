@@ -224,6 +224,7 @@ const CHECKS = [
   { id: 'pccw_noitalics', group: 'PCCW',    label: 'No italics', defaultOn: true },
   { id: 'pccw_end_punct', group: 'PCCW',    label: 'Ending punctuation', defaultOn: true },
   { id: 'pccw_ampm',      group: 'PCCW', label: 'Time: am/pm without space', defaultOn: true },
+  { id: 'pccw_hyp_mid', group: 'PCCW', label: 'Two hyphens for dialogue lines', defaultOn: true },
 
   // --- GROUP 5: CJENM (Empty for now) ---
 
@@ -746,6 +747,20 @@ if (isChecked('gen_numtreat')) {
           }
         });
       }
+     if (isChecked('pccw_hyp_mid')) {
+  lines.forEach(line => {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith('-')) {
+      const middleHyphen = /\s-\s/.test(trimmed.slice(1));
+
+      if (!middleHyphen) {
+        errs.push('PCCW Missing middle hyphen separator');
+        allErrorsSet.add('PCCW Missing middle hyphen separator');
+      }
+    }
+  });
+}
     }
 
     // --- READING SPEED (CPS) CHECKS ---
