@@ -532,13 +532,14 @@ function runChecks() {
       }
 if (isChecked('gen_ampm')) {
   const text = stripTags(r.dialogue);
-
   const matches = text.match(
-    /\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
+    /\b\d{1,2}(?::\d{2})?\s*\b(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
   ) || [];
-
   matches.forEach(t => {
-    if (!/^\d{1,2}(?::\d{2})?\s(?:[AaPp]\.?[Mm]\.?)$/.test(t.trim())) {
+    // Correct format:
+    // 5 a.m.
+    // 5:30 p.m.
+    if (!/^\d{1,2}(?::\d{2})?\s(?:a\.m\.|p\.m\.)$/i.test(t.trim())) {
       errs.push(`Incorrect a.m./p.m. format: ${t}`);
       allErrorsSet.add('Incorrect a.m./p.m. format');
     }
