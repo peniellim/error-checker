@@ -197,6 +197,8 @@ const CHECKS = [
   { id: 'gen_hypcon',     group: 'General', label: 'Hyphen for 2 speakers', defaultOn: true },
   { id: 'gen_ampm',       group: 'General', label: 'Time: a.m./p.m. with space', defaultOn: true },
   { id: 'gen_numtreat',   group: 'General', label: 'Number treatment', defaultOn: true },
+  { id: 'gen_percent',   group: 'General', label: 'Percent sign', defaultOn: true },
+  { id: 'gen_credit',    group: 'General', label: "Translator's credit", defaultOn: true },
 
   // --- GROUP 2: COUPANG ---
   { id: 'coup_mindur20',  group: 'Coupang', label: 'Min duration 20 frames', defaultOn: true },
@@ -550,6 +552,10 @@ if (isChecked('gen_ampm')) {
     }
   });
 }
+     if (isChecked('gen_percent') && /%/.test(r.dialogue)) {
+  errs.push('Percent sign (%) should be written as "percent"');
+  allErrorsSet.add('Percent sign');
+}
       
 // Number Treatment
 if (isChecked('gen_numtreat')) {
@@ -785,6 +791,15 @@ if (isChecked('gen_numtreat')) {
       if (isChecked('net_rs30') && rsv > 30) { errs.push(`Netflix CPS > 30`); allErrorsSet.add('Netflix CPS > 30'); }
     }
   });
+ if (isChecked('gen_credit') && processed.length > 0) {
+  const last = processed[processed.length - 1];
+  const text = stripTags(last.dialogue).trim();
+
+  if (!/subtitle\s+translation\s+by/i.test(text)) {
+    last.errors.push("Missing translator's credit");
+    allErrorsSet.add("Missing translator's credit");
+  }
+}
 
   renderResults(processed, allErrorsSet);
 }
