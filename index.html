@@ -195,7 +195,7 @@ const CHECKS = [
   { id: 'gen_mergeable',  group: 'General', label: 'Fit to 1 line', defaultOn: true },
   { id: 'gen_maxlines2',  group: 'General', label: 'Maximum 2 lines', defaultOn: true },
   { id: 'gen_hypcon',     group: 'General', label: 'Hyphen for 2 speakers', defaultOn: true },
-  { id: 'gen_ampm',       group: 'General', label: 'Time: a.m./p.m. with space', defaultOn: true },
+  { id: 'gen_ampm',       group: 'General', label: 'Time: a.m./p.m.', defaultOn: true },
   { id: 'gen_numtreat',   group: 'General', label: 'Number treatment', defaultOn: true },
   { id: 'gen_percent',   group: 'General', label: 'Percent sign', defaultOn: true },
   { id: 'gen_credit',    group: 'General', label: "Translator's credit", defaultOn: true },
@@ -409,7 +409,7 @@ function isTimeContext(text, index) {
 
   return (
     /^\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i.test(after) ||
-    /^\s*o['’]?clock\b/i.test(after)
+    /^\s*o['']?clock\b/i.test(after)
   );
 }
 
@@ -534,24 +534,32 @@ function runChecks() {
         const bad = dots.filter(s => s.length !== 3);
         if (bad.length > 0) { errs.push(`Dots: ${bad.join(',')}`); allErrorsSet.add('Incorrect ellipsis'); }
       }
+
+// ===== STRICT gen_ampm CHECK (Group 1, Rule #11) =====
 if (isChecked('gen_ampm')) {
   const text = stripTags(r.dialogue);
-  const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?|am|pm)\.?/gi) || [];
-  matches.forEach(t => {
-    const normalized = t.replace(/\s+/g, ' ').trim();
-    const correct = normalized.replace(
-      /(a\.?\s*m\.?|p\.?\s*m\.?|am|pm)\.?$/i,
-      (m) => {
-        const value = m.toLowerCase().replace(/\./g, '').replace(/\s/g, '');
-        return value === 'am' ? 'a.m.' : 'p.m.';
-      }
-    ).replace(/(a\.m\.|p\.m\.)$/, ' $1');
-    if (normalized !== correct) {
-      errs.push(`Incorrect a.m./p.m. format: ${t}`);
+  // Match any time-like pattern: digits, optionally with :digits, then optional whitespace, then am/pm in any case
+  const timePatterns = text.match(/\d{1,2}(?::\d{2})?(?:\s+)?(?:[aA]\.?[mM]\.?|[pP]\.?[mM]\.?|am|pm|AM|PM|aM|Am|pM|Pm)/gi) || [];
+  
+  timePatterns.forEach(match => {
+    // VALID formats ONLY: "6 a.m." or "6 A.M." or "6 p.m." or "6 P.M."
+    // (with optional colon-time like "6:30 a.m.")
+    const validFormats = [
+      /^\d{1,2}(?::\d{2})?\s+a\.m\.$/,  // 6 a.m. or 6:30 a.m.
+      /^\d{1,2}(?::\d{2})?\s+A\.M\.$/,  // 6 A.M. or 6:30 A.M.
+      /^\d{1,2}(?::\d{2})?\s+p\.m\.$/,  // 6 p.m. or 6:30 p.m.
+      /^\d{1,2}(?::\d{2})?\s+P\.M\.$/   // 6 P.M. or 6:30 P.M.
+    ];
+    
+    const isValid = validFormats.some(regex => regex.test(match));
+    
+    if (!isValid) {
+      errs.push(`Incorrect time format`);
       allErrorsSet.add('Incorrect a.m./p.m. format');
     }
   });
 }
+
      if (isChecked('gen_percent') && /%/.test(r.dialogue)) {
   errs.push('Percent sign (%) should be written as "percent"');
   allErrorsSet.add('Percent sign');
