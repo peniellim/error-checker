@@ -224,7 +224,8 @@ const CHECKS = [
   { id: 'pccw_noitalics', group: 'PCCW',    label: 'No italics', defaultOn: true },
   { id: 'pccw_end_punct', group: 'PCCW',    label: 'Ending punctuation', defaultOn: true },
   { id: 'pccw_ampm',      group: 'PCCW', label: 'Time: am/pm without space', defaultOn: true },
-  { id: 'pccw_hyp_mid', group: 'PCCW', label: 'Two hyphens for dialogue lines', defaultOn: true },
+  { id: 'pccw_hyp_mid', group: 'PCCW', label: 'Two hyphens for 2spk', defaultOn: true },
+  { id: 'pccw_allcaps', group: 'PCCW', label: 'All uppercase', defaultOn: true },
 
   // --- GROUP 5: CJENM (Empty for now) ---
 
@@ -763,6 +764,15 @@ if (isChecked('gen_numtreat')) {
       }
     }
   });
+}
+     if (isChecked('pccw_allcaps')) {
+  const clean = stripTags(r.dialogue)
+    .replace(/[^A-Za-z]/g, '');
+
+  if (clean.length > 0 && clean === clean.toUpperCase()) {
+    errs.push('PCCW All caps');
+    allErrorsSet.add('PCCW All caps');
+  }
 }
     }
 
