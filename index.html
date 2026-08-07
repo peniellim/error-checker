@@ -754,27 +754,42 @@ if (isChecked('gen_numtreat')) {
       if (isChecked('pccw_noitalics') && /<i>|<\/i>/i.test(r.dialogue)) {
         errs.push('PCCW Italics detected'); allErrorsSet.add('PCCW Italics forbidden');
       }
-if (isChecked('pccw_ampm')) {
-  const text = stripTags(r.dialogue);
-  // Match any time-like pattern: digits, optionally with :digits, then optional whitespace, then am/pm in any case
-  const timePatterns = text.match(/\d{1,2}(?::\d{2})?(?:\s+)?(?:[aA]\.?[mM]\.?|[pP]\.?[mM]\.?|am|pm|AM|PM|aM|Am|pM|Pm)/gi) || [];
-  
-  timePatterns.forEach(match => {
-    // VALID formats ONLY: "6am" or "6pm" (lowercase, no space, no periods)
-    // (with optional colon-time like "6:30am")
-    const validFormats = [
-      /^\d{1,2}(?::\d{2})?am$/,  // 6am or 6:30am
-      /^\d{1,2}(?::\d{2})?pm$/   // 6pm or 6:30pm
-    ];
-    
-    const isValid = validFormats.some(regex => regex.test(match));
-    
-    if (!isValid) {
-      errs.push(`PCCW Incorrect time format: ${match}`);
-      allErrorsSet.add('PCCW am/pm format');
-    }
-  });
-}
+// ===== STRICT pccw_ampm CHECK (Group 4, Rule #7) =====
+      if (isChecked('pccw_ampm')) {
+        const text = stripTags(r.dialogue);
+        // Match any time-like pattern: digits, optionally with :digits, then optional whitespace, then am/pm in any case
+        // Use negative lookahead to exclude patterns where am/pm is followed by a period that's part of the format (like "a.m.")
+        const timePatterns = text.match(/\d{1,2}(?::\d{2})?(?:\s+)?(?:[aA]\.?[mM]\.?|[pP]\.?[mM]\.?|am|pm|AM|PM|aM|Am|pM|Pm)/gi) || [];
+        
+        timePatterns.forEach(match => {
+          // Check for ambiguous case: "6am." or "6pm." (could be format error OR sentence end)
+          if (/^\d{1,2}(?::\d{2})?(am|pm)\.$/.test(match)) {
+            errs.push(`⚠ Check incorrect time format or end of a sentence`);
+            allErrorsSet.add('PCCW Ambiguous am/pm format');
+            return; // Skip further validation for this match
+          }
+          
+          // Strip trailing period if it's a sentence-ending period (not part of format)
+          let cleanMatch = match;
+          if (cleanMatch.endsWith('.') && !cleanMatch.includes('a.m') && !cleanMatch.includes('p.m') && !cleanMatch.includes('A.M') && !cleanMatch.includes('P.M')) {
+            cleanMatch = cleanMatch.slice(0, -1);
+          }
+          
+          // VALID formats ONLY: "6am" or "6pm" (lowercase, no space, no periods)
+          // (with optional colon-time like "6:30am")
+          const validFormats = [
+            /^\d{1,2}(?::\d{2})?am$/,  // 6am or 6:30am
+            /^\d{1,2}(?::\d{2})?pm$/   // 6pm or 6:30pm
+          ];
+          
+          const isValid = validFormats.some(regex => regex.test(cleanMatch));
+          
+          if (!isValid) {
+            errs.push(`PCCW Incorrect time format`);
+            allErrorsSet.add('PCCW am/pm format');
+          }
+        });
+      }
      if (isChecked('pccw_hyp_mid')) {
   lines.forEach(line => {
     const trimmed = line.trim();
