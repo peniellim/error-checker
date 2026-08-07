@@ -717,12 +717,24 @@ if (isChecked('pccw_ampm')) {
     }
   });
 
- if (isChecked('gen_credit') && processed.length > 0) {
+if (isChecked('gen_credit') && processed.length > 0) {
   const last = processed[processed.length - 1];
   const text = stripTags(last.dialogue).trim();
+
+  // Must contain translator's credit
   if (!/subtitle\s+translation\s+by/i.test(text)) {
     last.errors.push("Missing translator's credit");
     allErrorsSet.add("Missing translator's credit");
+  }
+
+  // Must be exactly 2 seconds long
+  if (last.startF != null && last.endF != null) {
+    const duration = framesToSec(last.endF - last.startF, fps);
+
+    if (Math.abs(duration - 2) > 0.001) {
+      last.errors.push("Translator's credit must be 2 seconds");
+      allErrorsSet.add("Translator's credit duration");
+    }
   }
 }
 
