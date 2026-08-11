@@ -204,7 +204,7 @@ const CHECKS = [
   { id:'coup_mindur25', group:'Coupang', label:'Min duration 25 frames', defaultOn:true },
   { id:'coup_maxdur6s', group:'Coupang', label:'Max duration 6 seconds', defaultOn:true },
   { id:'coup_hyp_space', group:'Coupang', label:'Spacing after hyphen', defaultOn:true },
-  { id:'coup_ital_punct', group:'Coupang', label:'Italic punctuation', defaultOn:true },
+  { id:'coup_ital_punct', group:'Coupang', label:'Partial italics', defaultOn:true },
   { id:'coup_char42', group:'Coupang', label:'Character limit: 42', defaultOn:true },
   { id:'coup_rs20', group:'Coupang', label:'Over 20 CPS', defaultOn:true },
   { id:'coup_rs30', group:'Coupang', label:'Over 30 CPS', defaultOn:true },
@@ -914,8 +914,8 @@ function runChecks(){
       }
 
       if(isChecked('coup_ital_punct')&&r.italicPunct){
-        errs.push('Coupang Italic punctuation');
-        allErrorsSet.add('Coupang Italic punctuation');
+        errs.push('Partial italics punctuation');
+        allErrorsSet.add('Partial italics punctuation');
       }
 
       if(isChecked('pccw_uppercase')&&isAllUppercase(cleanDialogue)){
