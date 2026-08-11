@@ -303,6 +303,12 @@ function tsToFrames(val, fps) {
 function framesToSec(frames, fps) { return frames / fps; }
 function getLines(text) { return text ? String(text).split(/\r?\n/) : []; }
 
+function cellHasItalic(cell) {
+  if (!cell) return false;
+  const html = cell.h || '';
+  return /<i(?:\s[^>]*)?>/i.test(html);
+}
+
 const SMALL_NUMBERS = {
   zero:0, one:1, two:2, three:3, four:4, five:5,
   six:6, seven:7, eight:8, nine:9, ten:10,
@@ -426,7 +432,7 @@ function loadFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      workbook = XLSX.read(e.target.result, { type:'array', raw:false, cellStyles:true, cellNF:true });
+      workbook = XLSX.read(e.target.result, { type:'array', raw:false, cellHTML:true });
       document.getElementById('run-btn').disabled = false;
     } catch (err) { alert("Error reading file."); }
   };
@@ -455,8 +461,8 @@ function runChecks() {
     const startTs = row[1] != null ? String(row[1]).trim() : '';
     const endTs   = row[2] != null ? String(row[2]).trim() : '';
     const dialogue = row[4] != null ? String(row[4]) : '';
-const dialogueCell = sheet[XLSX.utils.encode_cell({ r: idx + skip, c: 4 })];
-const hasItalic = !!(dialogueCell && dialogueCell.s && dialogueCell.s.font && dialogueCell.s.font.italic);
+    const dialogueCell = sheet[XLSX.utils.encode_cell({ r: idx + skip, c: 4 })];
+    const hasItalic = cellHasItalic(dialogueCell);
     const startF  = tsToFrames(startTs, fps);
     const endF    = tsToFrames(endTs, fps);
     
@@ -648,7 +654,8 @@ if (isChecked('gen_numtreat')) {
 
       // Style Mechanics
 if (isChecked('pccw_noitalics') && r.hasItalic) {
-  errs.push('PCCW Italics detected'); allErrorsSet.add('PCCW Italics forbidden');
+  errs.push('PCCW Italics detected');
+  allErrorsSet.add('PCCW Italics forbidden');
 }
 
 // ===== STRICT pccw_ampm CHECK (Group 4, Rule #7) =====
