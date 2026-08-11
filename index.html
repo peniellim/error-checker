@@ -7,457 +7,94 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
-  background: #f5f5f0;
-  color: #1a1a1a;
-  min-height: 100vh;
-}
-
-.page {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-h1 {
-  font-size: 22px;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.subtitle-text {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 1.5rem;
-}
-
-.card {
-  background: #fff;
-  border: 0.5px solid #ddd;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.card-title {
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #888;
-  margin-bottom: 1rem;
-}
-
-.row {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.upload-area {
-  border: 2px dashed #ccc;
-  border-radius: 10px;
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  background: #fafafa;
-}
-
-.upload-area:hover,
-.upload-area.drag-over {
-  border-color: #5c5fef;
-  background: #f0f0ff;
-}
-
-.upload-area input[type=file] {
-  display: none;
-}
-
-.upload-icon {
-  font-size: 32px;
-  margin-bottom: 0.5rem;
-}
-
-.upload-label {
-  font-size: 14px;
-  color: #555;
-}
-
-.upload-label strong {
-  color: #5c5fef;
-  cursor: pointer;
-}
-
-.file-name {
-  margin-top: 0.75rem;
-  font-size: 13px;
-  color: #5c5fef;
-  font-weight: 500;
-}
-
-select {
-  padding: 0.45rem 0.75rem;
-  border: 0.5px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.groups-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.group-section {
-  border-bottom: 1px dashed #eee;
-  padding-bottom: 1rem;
-}
-
-.group-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.group-heading {
-  font-size: 14px;
-  font-weight: 700;
-  color: #444;
-  margin-bottom: 0.6rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.group-heading span {
-  font-size: 11px;
-  background: #e2e2db;
-  padding: 1px 6px;
-  border-radius: 10px;
-  color: #555;
-}
-
-.checks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 0.4rem;
-}
-
-.check-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-  user-select: none;
-}
-
-.check-item:hover {
-  background: #f5f5f0;
-}
-
-.check-item input[type=checkbox] {
-  margin-top: 3px;
-  accent-color: #5c5fef;
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.check-num {
-  font-size: 13px;
-  color: #777;
-  min-width: 18px;
-}
-
-.check-label {
-  font-size: 13.5px;
-  color: #333;
-  line-height: 1.4;
-}
-
-.empty-group-text {
-  font-size: 13px;
-  color: #999;
-  font-style: italic;
-  padding-left: 0.6rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.4rem;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  transition: opacity 0.15s, transform 0.1s;
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-.btn-primary {
-  background: #5c5fef;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  opacity: 0.88;
-}
-
-.btn-primary:disabled {
-  background: #bbb;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #f0f0f0;
-  color: #444;
-  border: 0.5px solid #ccc;
-}
-
-.btn-secondary:hover {
-  background: #e8e8e8;
-}
-
-.controls-row {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-  border-top: 0.5px solid #ddd;
-  padding-top: 1.25rem;
-}
-
-.stats-row {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.stat-box {
-  background: #f5f5f0;
-  border-radius: 8px;
-  padding: 0.6rem 1rem;
-  min-width: 120px;
-}
-
-.stat-box .val {
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.stat-box .lbl {
-  font-size: 12px;
-  color: #888;
-}
-
-.stat-box.err .val {
-  color: #c0392b;
-}
-
-.stat-box.warn .val {
-  color: #d97706;
-}
-
-.stat-box.ok .val {
-  color: #16a34a;
-}
-
-#results-area {
-  display: none;
-}
-
-.results-table-wrap {
-  overflow-x: auto;
-  border-radius: 10px;
-  border: 0.5px solid #ddd;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-thead th {
-  background: #f5f5f0;
-  padding: 0.6rem 0.75rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 12px;
-  color: #666;
-  border-bottom: 0.5px solid #ddd;
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-tbody td {
-  padding: 0.55rem 0.75rem;
-  border-bottom: 0.5px solid #eee;
-  vertical-align: top;
-}
-
-tbody tr:last-child td {
-  border-bottom: none;
-}
-
-tbody tr.has-error {
-  background: #fff8e1;
-}
-
-tbody tr.has-error:hover {
-  background: #fff3cd;
-}
-
-tbody tr:not(.has-error):hover {
-  background: #fafafa;
-}
-
-.error-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.etag {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: #fde8e8;
-  color: #c0392b;
-  border: 0.5px solid #f5c6c6;
-  white-space: nowrap;
-}
-
-.dialogue-cell {
-  white-space: pre-wrap;
-  max-width: 500px;
-  min-width: 250px;
-  word-break: break-word;
-  line-height: 1.5;
-}
-
-.dialogue-cell i,
-.dialogue-cell em {
-  font-style: italic;
-}
-
-.dialogue-cell b,
-.dialogue-cell strong {
-  font-weight: 700;
-}
-
-.dialogue-cell u {
-  text-decoration: underline;
-}
-
-.no-errors {
-  text-align: center;
-  padding: 3rem;
-  color: #888;
-}
-
-.no-errors .big {
-  font-size: 32px;
-  margin-bottom: 0.5rem;
-}
-
-.filter-row {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.filter-row label {
-  font-size: 13px;
-  color: #555;
-}
-
-.filter-row select {
-  font-size: 13px;
-}
-
-.toggle-all {
-  font-size: 13px;
-  color: #5c5fef;
-  cursor: pointer;
-  text-decoration: underline;
-  background: none;
-  border: none;
-  padding: 0;
-}
-
-.hint {
-  font-size: 12px;
-  color: #aaa;
-  margin-top: 0.25rem;
-}
-
-.ts {
-  font-family: monospace;
-  font-size: 12px;
-  color: #555;
-  white-space: nowrap;
-}
-
-.rs {
-  font-size: 12px;
-}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+.page { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 0.25rem; }
+.subtitle-text { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+.card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+.card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 1rem; }
+.row { display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start; }
+.upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: #fafafa; }
+.upload-area:hover, .upload-area.drag-over { border-color: #5c5fef; background: #f0f0ff; }
+.upload-area input[type=file] { display: none; }
+.upload-icon { font-size: 32px; margin-bottom: 0.5rem; }
+.upload-label { font-size: 14px; color: #555; }
+.upload-label strong { color: #5c5fef; cursor: pointer; }
+.file-name { margin-top: 0.75rem; font-size: 13px; color: #5c5fef; font-weight: 500; }
+select { padding: 0.45rem 0.75rem; border: 0.5px solid #ccc; border-radius: 8px; font-size: 14px; background: #fff; cursor: pointer; }
+.groups-container { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem; }
+.group-section { border-bottom: 1px dashed #eee; padding-bottom: 1rem; }
+.group-section:last-child { border-bottom: none; padding-bottom: 0; }
+.group-heading { font-size: 14px; font-weight: 700; color: #444; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+.group-heading span { font-size: 11px; background: #e2e2db; padding: 1px 6px; border-radius: 10px; color: #555; }
+.checks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 0.4rem; }
+.check-item { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; transition: background 0.15s; user-select: none; }
+.check-item:hover { background: #f5f5f0; }
+.check-item input[type=checkbox] { margin-top: 3px; accent-color: #5c5fef; width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.check-num { font-size: 13px; color: #777; min-width: 18px; }
+.check-label { font-size: 13.5px; color: #333; line-height: 1.4; }
+.empty-group-text { font-size: 13px; color: #999; font-style: italic; padding-left: 0.6rem; }
+.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.4rem; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s, transform 0.1s; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: #5c5fef; color: #fff; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+.btn-secondary { background: #f0f0f0; color: #444; border: 0.5px solid #ccc; }
+.btn-secondary:hover { background: #e8e8e8; }
+.controls-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; border-top: 0.5px solid #ddd; padding-top: 1.25rem; }
+.stats-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.stat-box { background: #f5f5f0; border-radius: 8px; padding: 0.6rem 1rem; min-width: 120px; }
+.stat-box .val { font-size: 20px; font-weight: 600; }
+.stat-box .lbl { font-size: 12px; color: #888; }
+.stat-box.err .val { color: #c0392b; }
+.stat-box.warn .val { color: #d97706; }
+.stat-box.ok .val { color: #16a34a; }
+#results-area { display: none; }
+.results-table-wrap { overflow-x: auto; border-radius: 10px; border: 0.5px solid #ddd; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: #f5f5f0; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; font-size: 12px; color: #666; border-bottom: 0.5px solid #ddd; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+tbody td { padding: 0.55rem 0.75rem; border-bottom: 0.5px solid #eee; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr.has-error { background: #fff8e1; }
+tbody tr.has-error:hover { background: #fff3cd; }
+tbody tr:not(.has-error):hover { background: #fafafa; }
+.error-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.etag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: #fde8e8; color: #c0392b; border: 0.5px solid #f5c6c6; white-space: nowrap; }
+.dialogue-cell { white-space: pre-wrap; max-width: 500px; min-width: 250px; word-break: break-word; line-height: 1.5; }
+.dialogue-cell i, .dialogue-cell em { font-style: italic; }
+.dialogue-cell b, .dialogue-cell strong { font-weight: 700; }
+.dialogue-cell u { text-decoration: underline; }
+.no-errors { text-align: center; padding: 3rem; color: #888; }
+.no-errors .big { font-size: 32px; margin-bottom: 0.5rem; }
+.filter-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.filter-row label { font-size: 13px; color: #555; }
+.filter-row select { font-size: 13px; }
+.toggle-all { font-size: 13px; color: #5c5fef; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+.hint { font-size: 12px; color: #aaa; margin-top: 0.25rem; }
+.ts { font-family: monospace; font-size: 12px; color: #555; white-space: nowrap; }
+.rs { font-size: 12px; }
 
 @media (max-width: 700px) {
-  .checks-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .row {
-    flex-direction: column;
-  }
+  .checks-grid { grid-template-columns: 1fr; }
+  .row { flex-direction: column; }
 }
 </style>
 </head>
 
 <body>
-
 <div class="page">
 
   <h1>Subtitle Error Checker</h1>
-
   <p class="subtitle-text">
     Upload an Excel subtitle file and select which checks to run.
   </p>
 
   <div class="card">
-
     <div class="card-title">File &amp; Settings</div>
 
     <div class="row">
 
       <div style="flex:1;min-width:220px;">
-
         <div class="upload-area" id="drop-zone">
 
           <input type="file" id="file-input" accept=".xlsx,.xls">
@@ -474,13 +111,11 @@ tbody tr:not(.has-error):hover {
           <div class="file-name" id="file-name-display"></div>
 
         </div>
-
       </div>
 
       <div style="display:flex;flex-direction:column;gap:0.75rem;min-width:200px;">
 
         <div>
-
           <div style="font-size:13px;font-weight:500;margin-bottom:0.4rem;">
             Frame rate
           </div>
@@ -495,11 +130,9 @@ tbody tr:not(.has-error):hover {
             <option value="59.94">59.94 fps</option>
             <option value="60">60 fps</option>
           </select>
-
         </div>
 
         <div>
-
           <div style="font-size:13px;font-weight:500;margin-bottom:0.4rem;">
             Sheet (tab name or number)
           </div>
@@ -510,11 +143,9 @@ tbody tr:not(.has-error):hover {
             placeholder="Leave blank for first sheet"
             style="padding:0.45rem 0.75rem;border:0.5px solid #ccc;border-radius:8px;font-size:14px;width:100%;"
           >
-
         </div>
 
         <div>
-
           <div style="font-size:13px;font-weight:500;margin-bottom:0.4rem;">
             Header rows to skip
           </div>
@@ -531,15 +162,11 @@ tbody tr:not(.has-error):hover {
           <p class="hint">
             Default: 1 row (row 1 = header)
           </p>
-
         </div>
 
       </div>
-
     </div>
-
   </div>
-
 
   <div class="card">
 
@@ -550,7 +177,6 @@ tbody tr:not(.has-error):hover {
       </div>
 
       <div style="display:flex;gap:0.75rem;">
-
         <button class="toggle-all" onclick="toggleAll(true)">
           Select all
         </button>
@@ -558,7 +184,6 @@ tbody tr:not(.has-error):hover {
         <button class="toggle-all" onclick="toggleAll(false)">
           Deselect all
         </button>
-
       </div>
 
     </div>
@@ -576,17 +201,13 @@ tbody tr:not(.has-error):hover {
         Run checks
       </button>
 
-      <button
-        class="btn btn-secondary"
-        onclick="resetAll()"
-      >
+      <button class="btn btn-secondary" onclick="resetAll()">
         Reset
       </button>
 
     </div>
 
   </div>
-
 
   <div id="results-area">
 
@@ -618,7 +239,6 @@ tbody tr:not(.has-error):hover {
         <table id="results-table">
 
           <thead>
-
             <tr>
               <th>#</th>
               <th>Row</th>
@@ -628,7 +248,6 @@ tbody tr:not(.has-error):hover {
               <th>Read speed (Calc)</th>
               <th>Errors</th>
             </tr>
-
           </thead>
 
           <tbody id="results-body"></tbody>
@@ -636,13 +255,10 @@ tbody tr:not(.has-error):hover {
         </table>
 
       </div>
-
     </div>
-
   </div>
 
 </div>
-
 
 <script>
 
@@ -654,7 +270,6 @@ const GROUPS = [
   { key: 'CJENM', label: 'CJENM' },
   { key: 'Netflix', label: 'Netflix' }
 ];
-
 
 const CHECKS = [
 
@@ -709,16 +324,17 @@ const CHECKS = [
 
 ];
 
-
 let workbook = null;
-
 window._tableData = [];
 
 
+/* =========================================================
+   CHECKBOXES
+   ========================================================= */
+
 function buildCheckboxes() {
 
-  const container =
-    document.getElementById('groups-container');
+  const container = document.getElementById('groups-container');
 
   if (!container) return;
 
@@ -726,49 +342,35 @@ function buildCheckboxes() {
 
   GROUPS.forEach((g, gIdx) => {
 
-    const groupSection =
-      document.createElement('div');
-
+    const groupSection = document.createElement('div');
     groupSection.className = 'group-section';
 
-    const heading =
-      document.createElement('div');
-
+    const heading = document.createElement('div');
     heading.className = 'group-heading';
-
-    heading.innerHTML =
-      `Group ${gIdx + 1}: ${g.label}`;
+    heading.innerHTML = `Group ${gIdx + 1}: ${g.label}`;
 
     groupSection.appendChild(heading);
 
-    const groupChecks =
-      CHECKS.filter(c => c.group === g.key);
+    const groupChecks = CHECKS.filter(
+      c => c.group === g.key
+    );
 
     if (groupChecks.length === 0) {
 
-      const emptyText =
-        document.createElement('div');
-
-      emptyText.className =
-        'empty-group-text';
-
-      emptyText.textContent =
-        '(None for now. To be updated soon)';
+      const emptyText = document.createElement('div');
+      emptyText.className = 'empty-group-text';
+      emptyText.textContent = '(None for now. To be updated soon)';
 
       groupSection.appendChild(emptyText);
 
     } else {
 
-      const grid =
-        document.createElement('div');
-
+      const grid = document.createElement('div');
       grid.className = 'checks-grid';
 
       groupChecks.forEach((c, cIdx) => {
 
-        const div =
-          document.createElement('label');
-
+        const div = document.createElement('label');
         div.className = 'check-item';
 
         div.innerHTML = `
@@ -786,13 +388,11 @@ function buildCheckboxes() {
       });
 
       groupSection.appendChild(grid);
-
     }
 
     container.appendChild(groupSection);
 
   });
-
 }
 
 
@@ -800,8 +400,7 @@ function toggleAll(on) {
 
   CHECKS.forEach(c => {
 
-    const el =
-      document.getElementById('chk_' + c.id);
+    const el = document.getElementById('chk_' + c.id);
 
     if (el) {
       el.checked = on;
@@ -814,12 +413,14 @@ function toggleAll(on) {
 
 function isChecked(id) {
 
-  return document
-    .getElementById('chk_' + id)
-    ?.checked;
+  return document.getElementById('chk_' + id)?.checked;
 
 }
 
+
+/* =========================================================
+   GENERAL HELPERS
+   ========================================================= */
 
 function stripTags(text) {
 
@@ -849,7 +450,6 @@ function tsToFrames(val, fps) {
   }
 
   const str = String(val).trim();
-
   const parts = str.split(':');
 
   if (parts.length < 4) {
@@ -884,6 +484,10 @@ function getLines(text) {
 }
 
 
+/* =========================================================
+   NUMBER RULES
+   ========================================================= */
+
 const SMALL_NUMBERS = {
   zero: 0,
   one: 1,
@@ -907,7 +511,6 @@ const SMALL_NUMBERS = {
   nineteen: 19
 };
 
-
 const TENS = {
   twenty: 20,
   thirty: 30,
@@ -918,7 +521,6 @@ const TENS = {
   eighty: 80,
   ninety: 90
 };
-
 
 const SCALES = {
   hundred: 100,
@@ -969,7 +571,6 @@ function wordNumberToValue(words) {
       return null;
 
     }
-
   }
 
   return found
@@ -1002,10 +603,9 @@ function numberWordsRegex() {
 
 function isMetricContext(text, index) {
 
-  const after =
-    text.slice(index).match(
-      /^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i
-    );
+  const after = text.slice(index).match(
+    /^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i
+  );
 
   return !!after;
 
@@ -1014,8 +614,7 @@ function isMetricContext(text, index) {
 
 function isTimeContext(text, index) {
 
-  const after =
-    text.slice(index);
+  const after = text.slice(index);
 
   return (
     /^\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i.test(after) ||
@@ -1041,15 +640,18 @@ function isProtectedName(text, match) {
 }
 
 
+/* =========================================================
+   HTML / ITALICS FUNCTIONS
+   ========================================================= */
+
 function parseHtml(html) {
 
   const parser = new DOMParser();
 
-  const doc =
-    parser.parseFromString(
-      `<div id="root">${html || ''}</div>`,
-      'text/html'
-    );
+  const doc = parser.parseFromString(
+    `<div id="root">${html || ''}</div>`,
+    'text/html'
+  );
 
   return doc.getElementById('root');
 
@@ -1062,72 +664,92 @@ function isItalicElement(el) {
     return false;
   }
 
-  const tag =
-    el.tagName.toLowerCase();
+  const tag = el.tagName.toLowerCase();
 
-  if (
-    tag === 'i' ||
-    tag === 'em'
-  ) {
+  if (tag === 'i' || tag === 'em') {
     return true;
   }
 
-  const style =
-    el.getAttribute('style') || '';
+  const style = el.getAttribute('style') || '';
 
   return /font-style\s*:\s*italic/i.test(style);
 
 }
 
 
-/*
-  Detects italic formatting from the cell's rich-text XML.
+/* ---------------------------------------------------------
+   NEW:
+   Detect italic formatting represented directly on the
+   Excel cell rather than as <i> inside cell.h.
+   --------------------------------------------------------- */
 
-  This is important because an entire Excel cell can sometimes
-  be italicized without cell.h containing an <i> element.
-*/
-function hasItalicRichTextXML(xml) {
-
-  if (!xml) {
-    return false;
-  }
-
-  return (
-    /<i(?:\s[^>]*)?\/?>/i.test(xml) ||
-    /<i(?:\s[^>]*)?>[\s\S]*?<\/i>/i.test(xml) ||
-    /<vertAlign[^>]*val=["']sup['"]/i.test(xml) === false &&
-    /<rPr[\s\S]*?<i\b/i.test(xml)
-  );
-
-}
-
-
-/*
-  Checks whether the cell's normal style indicates italic font.
-*/
-function hasItalicCellStyle(cell) {
+function isCellStyleItalic(cell) {
 
   if (!cell || !cell.s) {
     return false;
   }
 
-  const s = cell.s;
+  const style = cell.s;
+
+  /*
+   * Depending on how SheetJS represents the workbook style,
+   * the font information can appear in different structures.
+   */
 
   if (
-    s.font &&
+    style.font &&
     (
-      s.font.italic === true ||
-      s.font.italic === 1
+      style.font.italic === true ||
+      style.font.italic === 1 ||
+      String(style.font.italic).toLowerCase() === 'true'
     )
   ) {
     return true;
   }
 
   if (
-    s.italic === true ||
-    s.italic === 1
+    style.font &&
+    typeof style.font === 'object' &&
+    (
+      style.font.italic === true ||
+      style.font.italic === 1
+    )
   ) {
     return true;
+  }
+
+  /*
+   * Some workbook/style representations may expose the
+   * italic property directly.
+   */
+
+  if (
+    style.italic === true ||
+    style.italic === 1 ||
+    String(style.italic).toLowerCase() === 'true'
+  ) {
+    return true;
+  }
+
+  /*
+   * Also check nested style objects when present.
+   */
+
+  if (
+    style.font &&
+    typeof style.font === 'object'
+  ) {
+
+    const font = style.font;
+
+    if (
+      font.i === true ||
+      font.i === 1 ||
+      String(font.i).toLowerCase() === 'true'
+    ) {
+      return true;
+    }
+
   }
 
   return false;
@@ -1135,93 +757,37 @@ function hasItalicCellStyle(cell) {
 }
 
 
-/*
-  Determines whether every meaningful text character in the
-  HTML is italicized.
-
-  Whitespace is ignored.
-
-  Example:
-
-    <i>Hello world!</i>
-    -> true
-
-    Hello <i>world!</i>
-    -> false
-*/
-function isEntireHtmlItalic(html) {
+function hasItalicFormatting(html) {
 
   if (!html) {
     return false;
   }
 
-  const root =
-    parseHtml(html);
+  const root = parseHtml(html);
 
-  let hasText = false;
-  let allItalic = true;
-
-  function walk(node, italicActive) {
-
-    if (node.nodeType === Node.TEXT_NODE) {
-
-      const text =
-        node.nodeValue || '';
-
-      const meaningful =
-        text.replace(/\s/g, '');
-
-      if (meaningful.length > 0) {
-
-        hasText = true;
-
-        if (!italicActive) {
-          allItalic = false;
-        }
-
-      }
-
-      return;
-
-    }
-
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      return;
-    }
-
-    const italicHere =
-      italicActive ||
-      isItalicElement(node);
-
-    [...node.childNodes].forEach(
-      child => walk(child, italicHere)
-    );
-
+  if (isItalicElement(root)) {
+    return true;
   }
 
-  [...root.childNodes].forEach(
-    node => walk(node, false)
-  );
-
-  return hasText && allItalic;
+  return [
+    ...root.querySelectorAll('*')
+  ].some(isItalicElement);
 
 }
 
 
-/*
-  Finds punctuation that is specifically inside italic
-  formatting.
+/* ---------------------------------------------------------
+   Detect punctuation inside rich-text italic sections.
+   This remains separate from entire-cell italic detection.
+   --------------------------------------------------------- */
 
-  This is used only for PARTIAL italics.
-*/
 function findItalicPunctuation(html) {
 
   if (!html) {
     return [];
   }
 
-  const root =
-    parseHtml(html);
+  const root = parseHtml(html);
 
   const punctuation =
     /[.,!?;:"'()\[\]{}\-…]/g;
@@ -1244,7 +810,6 @@ function findItalicPunctuation(html) {
       }
 
       return;
-
     }
 
     if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -1255,15 +820,19 @@ function findItalicPunctuation(html) {
       italicActive ||
       isItalicElement(node);
 
-    [...node.childNodes].forEach(
-      child => walk(child, italicHere)
-    );
+    [
+      ...node.childNodes
+    ].forEach(child => {
+      walk(child, italicHere);
+    });
 
   }
 
-  [...root.childNodes].forEach(
-    node => walk(node, false)
-  );
+  [
+    ...root.childNodes
+  ].forEach(node => {
+    walk(node, false);
+  });
 
   return [
     ...new Set(found)
@@ -1272,156 +841,9 @@ function findItalicPunctuation(html) {
 }
 
 
-/*
-  Determines all italics information for a cell.
-
-  Results:
-
-  hasItalics:
-    Any italic text exists.
-
-  entireCellItalic:
-    All meaningful text is italic.
-
-  italicPunctuation:
-    Punctuation inside italic text.
-
-  html:
-    HTML used by the error report.
-*/
-function getRichDialogueFromCell(cell, fallbackText) {
-
-  if (!cell) {
-
-    return {
-      html: sanitizeRichHtml('', fallbackText),
-      hasItalics: false,
-      entireCellItalic: false,
-      italicPunctuation: []
-    };
-
-  }
-
-  const html =
-    cell.h || '';
-
-  const richXml =
-    cell.r || '';
-
-  const htmlHasItalics =
-    hasItalicFormatting(html);
-
-  const xmlHasItalics =
-    hasItalicRichTextXML(richXml);
-
-  const styleHasItalics =
-    hasItalicCellStyle(cell);
-
-  let finalHtml =
-    sanitizeRichHtml(
-      html,
-      fallbackText
-    );
-
-  let entireCellItalic =
-    false;
-
-  /*
-    First determine whole-cell italics from HTML.
-  */
-  if (html && isEntireHtmlItalic(html)) {
-    entireCellItalic = true;
-  }
-
-  /*
-    If Excel gives us whole-cell italic through the cell style,
-    treat the entire cell as italic.
-  */
-  if (
-    styleHasItalics &&
-    !htmlHasItalics
-  ) {
-    entireCellItalic = true;
-  }
-
-  /*
-    If rich-text XML confirms italics but HTML does not expose
-    them, treat it as whole-cell italic for the purposes of
-    the checker and report display.
-  */
-  if (
-    xmlHasItalics &&
-    !htmlHasItalics
-  ) {
-    entireCellItalic = true;
-  }
-
-  /*
-    If the entire cell is italic but the HTML did not preserve
-    the formatting, recreate it for the error report.
-  */
-  if (
-    entireCellItalic &&
-    !htmlHasItalics
-  ) {
-
-    finalHtml =
-      `<i>${
-        escHtml(fallbackText || '')
-          .replace(/\r?\n/g, '<br>')
-      }</i>`;
-
-  }
-
-  /*
-    If the entire cell is italic, its punctuation must NOT
-    trigger the "Partial italics punctuation" rule.
-  */
-  const italicPunctuation =
-    entireCellItalic
-      ? []
-      : findItalicPunctuation(html);
-
-  return {
-
-    html: finalHtml,
-
-    hasItalics:
-      htmlHasItalics ||
-      xmlHasItalics ||
-      styleHasItalics,
-
-    entireCellItalic,
-
-    italicPunctuation
-
-  };
-
-}
-
-
-/*
-  General HTML italic detection.
-*/
-function hasItalicFormatting(html) {
-
-  if (!html) {
-    return false;
-  }
-
-  const root =
-    parseHtml(html);
-
-  if (isItalicElement(root)) {
-    return true;
-  }
-
-  return [
-    ...root.querySelectorAll('*')
-  ].some(isItalicElement);
-
-}
-
+/* =========================================================
+   RICH HTML SANITIZATION
+   ========================================================= */
 
 function sanitizeRichHtml(html, fallbackText) {
 
@@ -1429,15 +851,11 @@ function sanitizeRichHtml(html, fallbackText) {
 
     return escHtml(
       fallbackText || ''
-    ).replace(
-      /\r?\n/g,
-      '<br>'
-    );
+    ).replace(/\r?\n/g, '<br>');
 
   }
 
-  const root =
-    parseHtml(html);
+  const root = parseHtml(html);
 
   function serialize(node) {
 
@@ -1496,21 +914,90 @@ function sanitizeRichHtml(html, fallbackText) {
       .join('');
 
   result =
-    result.replace(
-      /(<br>)+$/i,
-      ''
-    );
+    result.replace(/(<br>)+$/i, '');
 
   return result ||
-    escHtml(
-      fallbackText || ''
-    ).replace(
-      /\r?\n/g,
-      '<br>'
-    );
+    escHtml(fallbackText || '')
+      .replace(/\r?\n/g, '<br>');
 
 }
 
+
+/* =========================================================
+   GET RICH DIALOGUE
+   ========================================================= */
+
+function getRichDialogueFromCell(cell, fallbackText) {
+
+  if (!cell) {
+
+    return {
+      html: sanitizeRichHtml('', fallbackText),
+      hasItalics: false,
+      entireCellItalic: false,
+      italicPunctuation: []
+    };
+
+  }
+
+  const html = cell.h || '';
+
+  /*
+   * Detect rich-text italic formatting.
+   */
+  const richTextItalic =
+    hasItalicFormatting(html);
+
+  /*
+   * Detect Excel cell-level italic formatting.
+   */
+  const cellStyleItalic =
+    isCellStyleItalic(cell);
+
+  /*
+   * If either method detects italics,
+   * the cell contains italics.
+   */
+  const hasItalics =
+    richTextItalic ||
+    cellStyleItalic;
+
+  /*
+   * Entire-cell italic means the Excel cell itself
+   * carries the italic style.
+   *
+   * This is intentionally kept separate from
+   * partial rich-text italics.
+   */
+  const entireCellItalic =
+    cellStyleItalic && !richTextItalic;
+
+  /*
+   * Keep punctuation detection based on rich-text
+   * formatting only.
+   *
+   * Therefore an entire-cell italic cell does NOT
+   * automatically become a "Partial italics punctuation"
+   * error.
+   */
+  const italicPunctuation =
+    entireCellItalic
+      ? []
+      : findItalicPunctuation(html);
+
+  return {
+    html: sanitizeRichHtml(html, fallbackText),
+    hasItalics,
+    entireCellItalic,
+    italicPunctuation
+  };
+
+}
+
+
+/* =========================================================
+   FILE HANDLING
+   ========================================================= */
 
 function setupDrop() {
 
@@ -1520,65 +1007,39 @@ function setupDrop() {
   const fi =
     document.getElementById('file-input');
 
-  dz.addEventListener(
-    'dragover',
-    e => {
+  dz.addEventListener('dragover', e => {
 
-      e.preventDefault();
+    e.preventDefault();
 
-      dz.classList.add(
-        'drag-over'
-      );
+    dz.classList.add('drag-over');
 
+  });
+
+  dz.addEventListener('dragleave', () => {
+
+    dz.classList.remove('drag-over');
+
+  });
+
+  dz.addEventListener('drop', e => {
+
+    e.preventDefault();
+
+    dz.classList.remove('drag-over');
+
+    if (e.dataTransfer.files[0]) {
+      loadFile(e.dataTransfer.files[0]);
     }
-  );
 
-  dz.addEventListener(
-    'dragleave',
-    () => {
+  });
 
-      dz.classList.remove(
-        'drag-over'
-      );
+  fi.addEventListener('change', () => {
 
+    if (fi.files[0]) {
+      loadFile(fi.files[0]);
     }
-  );
 
-  dz.addEventListener(
-    'drop',
-    e => {
-
-      e.preventDefault();
-
-      dz.classList.remove(
-        'drag-over'
-      );
-
-      if (e.dataTransfer.files[0]) {
-
-        loadFile(
-          e.dataTransfer.files[0]
-        );
-
-      }
-
-    }
-  );
-
-  fi.addEventListener(
-    'change',
-    () => {
-
-      if (fi.files[0]) {
-
-        loadFile(
-          fi.files[0]
-        );
-
-      }
-
-    }
-  );
+  });
 
 }
 
@@ -1587,8 +1048,7 @@ function loadFile(file) {
 
   document.getElementById(
     'file-name-display'
-  ).textContent =
-    file.name;
+  ).textContent = file.name;
 
   const reader =
     new FileReader();
@@ -1597,16 +1057,15 @@ function loadFile(file) {
 
     try {
 
-      workbook =
-        XLSX.read(
-          e.target.result,
-          {
-            type: 'array',
-            raw: false,
-            cellHTML: true,
-            cellStyles: true
-          }
-        );
+      workbook = XLSX.read(
+        e.target.result,
+        {
+          type: 'array',
+          raw: false,
+          cellHTML: true,
+          cellStyles: true
+        }
+      );
 
       document.getElementById(
         'run-btn'
@@ -1614,9 +1073,7 @@ function loadFile(file) {
 
     } catch (err) {
 
-      alert(
-        'Error reading file.'
-      );
+      alert('Error reading file.');
 
       console.error(err);
 
@@ -1628,6 +1085,10 @@ function loadFile(file) {
 
 }
 
+
+/* =========================================================
+   RUN CHECKS
+   ========================================================= */
 
 function runChecks() {
 
@@ -1667,10 +1128,8 @@ function runChecks() {
       parseInt(sheetInput) - 1;
 
     sheet =
-      (
-        !isNaN(idx) &&
-        workbook.SheetNames[idx]
-      )
+      (!isNaN(idx) &&
+       workbook.SheetNames[idx])
         ? workbook.Sheets[
             workbook.SheetNames[idx]
           ]
@@ -1696,1316 +1155,1294 @@ function runChecks() {
     new Set();
 
   const processed =
-    rows
-      .map((row, idx) => {
+    rows.map((row, idx) => {
 
-        const excelRow =
-          idx + skip + 1;
+      const excelRow =
+        idx + skip + 1;
 
-        const startTs =
-          row[1] != null
-            ? String(row[1]).trim()
-            : '';
+      const startTs =
+        row[1] != null
+          ? String(row[1]).trim()
+          : '';
 
-        const endTs =
-          row[2] != null
-            ? String(row[2]).trim()
-            : '';
+      const endTs =
+        row[2] != null
+          ? String(row[2]).trim()
+          : '';
 
-        const dialogue =
-          row[4] != null
-            ? String(row[4])
-            : '';
+      const dialogue =
+        row[4] != null
+          ? String(row[4])
+          : '';
 
-        const dialogueCell =
-          sheet['E' + excelRow];
+      const dialogueCell =
+        sheet['E' + excelRow];
 
-        const rich =
-          getRichDialogueFromCell(
-            dialogueCell,
-            dialogue
-          );
+      const rich =
+        getRichDialogueFromCell(
+          dialogueCell,
+          dialogue
+        );
 
-        const startF =
-          tsToFrames(
-            startTs,
-            fps
-          );
-
-        const endF =
-          tsToFrames(
-            endTs,
-            fps
-          );
-
-        let rs = '';
-
-        const durF =
-          (
-            startF != null &&
-            endF != null
-          )
-            ? endF - startF
-            : null;
-
-        if (
-          durF &&
-          durF > 0
-        ) {
-
-          const cleanText =
-            stripTags(dialogue)
-              .replace(/\s+/g, '');
-
-          rs =
-            (
-              cleanText.length /
-              framesToSec(
-                durF,
-                fps
-              )
-            ).toFixed(1);
-
-        }
-
-        return {
-
-          rowNum: excelRow,
-
+      const startF =
+        tsToFrames(
           startTs,
+          fps
+        );
 
+      const endF =
+        tsToFrames(
           endTs,
+          fps
+        );
 
-          dialogue,
-
-          dialogueHtml:
-            rich.html,
-
-          hasItalics:
-            rich.hasItalics,
-
-          entireCellItalic:
-            rich.entireCellItalic,
-
-          italicPunctuation:
-            rich.italicPunctuation,
-
-          rs,
-
-          startF,
-
-          endF,
-
-          errors: []
-
-        };
-
-      })
-      .filter(
-        r =>
-          r.startTs ||
-          r.endTs ||
-          r.dialogue
-      );
-
-
-  processed.forEach(
-    (r, i) => {
-
-      const errs =
-        r.errors;
-
-      const lines =
-        getLines(r.dialogue);
+      let rs = '';
 
       const durF =
         (
-          r.startF != null &&
-          r.endF != null
+          startF != null &&
+          endF != null
         )
-          ? r.endF - r.startF
+          ? endF - startF
           : null;
 
-      const durS =
-        durF != null
-          ? framesToSec(
-              durF,
-              fps
-            )
-          : null;
-
-
       if (
-        i <
-        processed.length - 1
+        durF &&
+        durF > 0
       ) {
 
-        const next =
-          processed[i + 1];
+        const cleanText =
+          stripTags(dialogue)
+            .replace(/\s+/g, '');
 
-        if (
-          r.endF != null &&
-          next.startF != null
-        ) {
-
-          const gap =
-            next.startF -
-            r.endF;
-
-          if (
-            isChecked(
-              'gen_overlap'
-            ) &&
-            gap < 0
-          ) {
-
-            errs.push(
-              `Overlap (${Math.abs(gap)}f)`
-            );
-
-            allErrorsSet.add(
-              'Overlap'
-            );
-
-          } else if (
-            isChecked(
-              'gen_gap2'
-            ) &&
-            gap >= 0 &&
-            gap < 2
-          ) {
-
-            errs.push(
-              `Gap < 2f (${gap}f)`
-            );
-
-            allErrorsSet.add(
-              'Gap < 2 frames'
-            );
-
-          }
-
-        }
+        rs = (
+          cleanText.length /
+          framesToSec(
+            durF,
+            fps
+          )
+        ).toFixed(1);
 
       }
 
+      return {
+
+        rowNum: excelRow,
+
+        startTs,
+        endTs,
+        dialogue,
+
+        dialogueHtml:
+          rich.html,
+
+        hasItalics:
+          rich.hasItalics,
+
+        entireCellItalic:
+          rich.entireCellItalic,
+
+        italicPunctuation:
+          rich.italicPunctuation,
+
+        rs,
+        startF,
+        endF,
+
+        errors: []
+
+      };
+
+    }).filter(
+      r =>
+        r.startTs ||
+        r.endTs ||
+        r.dialogue
+    );
+
+
+  processed.forEach((r, i) => {
+
+    const errs =
+      r.errors;
+
+    const lines =
+      getLines(r.dialogue);
+
+    const durF =
+      (
+        r.startF != null &&
+        r.endF != null
+      )
+        ? r.endF - r.startF
+        : null;
+
+    const durS =
+      durF != null
+        ? framesToSec(
+            durF,
+            fps
+          )
+        : null;
+
+
+    /* ---------------------------------------------
+       GENERAL GAP / OVERLAP
+       --------------------------------------------- */
+
+    if (
+      i <
+      processed.length - 1
+    ) {
+
+      const next =
+        processed[i + 1];
 
       if (
-        durF != null &&
-        durS != null
+        r.endF != null &&
+        next.startF != null
       ) {
 
+        const gap =
+          next.startF - r.endF;
+
         if (
-          isChecked(
-            'coup_mindur20'
-          ) &&
-          durF < 20
+          isChecked('gen_overlap') &&
+          gap < 0
         ) {
 
           errs.push(
-            'Coupang Short: < 20f'
+            `Overlap (${Math.abs(gap)}f)`
           );
 
           allErrorsSet.add(
-            'Coupang Short (< 20f)'
+            'Overlap'
           );
 
-        }
-
-        if (
-          isChecked(
-            'coup_mindur25'
-          ) &&
-          durF < 25
+        } else if (
+          isChecked('gen_gap2') &&
+          gap >= 0 &&
+          gap < 2
         ) {
 
           errs.push(
-            'Coupang Short: < 25f'
+            `Gap < 2f (${gap}f)`
           );
 
           allErrorsSet.add(
-            'Coupang Short (< 25f)'
+            'Gap < 2 frames'
           );
-
-        }
-
-        if (
-          isChecked(
-            'wbd_mindur1s'
-          ) &&
-          durS < 1.0
-        ) {
-
-          errs.push(
-            'WBD Short: < 1s'
-          );
-
-          allErrorsSet.add(
-            'WBD Short (< 1s)'
-          );
-
-        }
-
-        if (
-          isChecked(
-            'pccw_mindur1s'
-          ) &&
-          durS < 1.0
-        ) {
-
-          errs.push(
-            'PCCW Short: < 1s'
-          );
-
-          allErrorsSet.add(
-            'PCCW Short (< 1s)'
-          );
-
-        }
-
-        if (
-          isChecked(
-            'net_mindur1s'
-          ) &&
-          durS < 1.0
-        ) {
-
-          errs.push(
-            'Netflix Short: < 1s'
-          );
-
-          allErrorsSet.add(
-            'Netflix Short (< 1s)'
-          );
-
-        }
-
-        if (
-          isChecked(
-            'coup_maxdur6s'
-          ) &&
-          durS > 6.0
-        ) {
-
-          errs.push(
-            'Coupang Long: > 6s'
-          );
-
-          allErrorsSet.add(
-            'Coupang Long (> 6s)'
-          );
-
-        }
-
-        if (
-          isChecked(
-            'pccw_maxdur6s'
-          ) &&
-          durS > 6.0
-        ) {
-
-          errs.push(
-            'PCCW Long: > 6s'
-          );
-
-          allErrorsSet.add(
-            'PCCW Long (> 6s)'
-          );
-
-        }
-
-        if (
-          isChecked(
-            'wbd_maxdur8s'
-          ) &&
-          durS > 8.0
-        ) {
-
-          errs.push(
-            'WBD Long: > 8s'
-          );
-
-          allErrorsSet.add(
-            'WBD Long (> 8s)'
-          );
-
-        }
-
-        if (
-          isChecked(
-            'net_maxdur8s'
-          ) &&
-          durS > 8.0
-        ) {
-
-          errs.push(
-            'Netflix Long: > 8s'
-          );
-
-          allErrorsSet.add(
-            'Netflix Long (> 8s)'
-          );
-
-        }
-
-      }
-
-
-      if (
-        isChecked(
-          'gen_emptyline'
-        ) &&
-        r.dialogue.trim() === ''
-      ) {
-
-        errs.push(
-          'Empty dialogue'
-        );
-
-        allErrorsSet.add(
-          'Empty dialogue'
-        );
-
-      }
-
-
-      if (lines.length > 0) {
-
-        const cleanDialogue =
-          stripTags(
-            r.dialogue
-          ).trim();
-
-
-        if (
-          isChecked(
-            'gen_curlya'
-          ) &&
-          /[\u2018\u2019\u201A\u201B]/.test(
-            r.dialogue
-          )
-        ) {
-
-          errs.push(
-            'Curly apostrophe'
-          );
-
-          allErrorsSet.add(
-            'Curly apostrophe'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_multispc'
-          ) &&
-          / {2,}/.test(
-            r.dialogue
-          )
-        ) {
-
-          errs.push(
-            'Multiple spaces'
-          );
-
-          allErrorsSet.add(
-            'Multiple spaces'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_leadtrail'
-          ) &&
-          lines.some(
-            l => l !== l.trim()
-          )
-        ) {
-
-          errs.push(
-            'Lead/trail space'
-          );
-
-          allErrorsSet.add(
-            'Leading/trailing space'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'wbd_doublehyp'
-          ) &&
-          /--/.test(
-            r.dialogue
-          )
-        ) {
-
-          errs.push(
-            'WBD Double hyphens'
-          );
-
-          allErrorsSet.add(
-            'WBD Double hyphens (--)'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_dotseq'
-          )
-        ) {
-
-          const dots =
-            r.dialogue.match(
-              /\.{2,}/g
-            ) || [];
-
-          const bad =
-            dots.filter(
-              s => s.length !== 3
-            );
-
-          if (
-            bad.length > 0
-          ) {
-
-            errs.push(
-              `Dots: ${bad.join(',')}`
-            );
-
-            allErrorsSet.add(
-              'Invalid dot sequence'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_ampm'
-          )
-        ) {
-
-          const text =
-            stripTags(
-              r.dialogue
-            );
-
-          const matches =
-            text.match(
-              /\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
-            ) || [];
-
-          matches.forEach(t => {
-
-            const normalized =
-              t.replace(
-                /\s+/g,
-                ' '
-              ).trim();
-
-            const correct =
-              normalized.replace(
-                /\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
-                (m, x) => {
-
-                  const period =
-                    x.toLowerCase()
-                      .replace(/\./g, '')
-                      .replace(/\s/g, '');
-
-                  return ' ' +
-                    (
-                      period === 'am'
-                        ? 'a.m.'
-                        : 'p.m.'
-                    );
-
-                }
-              );
-
-            if (
-              normalized !== correct
-            ) {
-
-              errs.push(
-                `Incorrect a.m./p.m. format: ${t}`
-              );
-
-              allErrorsSet.add(
-                'Incorrect a.m./p.m. format'
-              );
-
-            }
-
-          });
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_percent'
-          ) &&
-          /%/.test(
-            r.dialogue
-          )
-        ) {
-
-          errs.push(
-            'Percent sign must be spelled out: %'
-          );
-
-          allErrorsSet.add(
-            'Percent sign (%)'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_numtreat'
-          )
-        ) {
-
-          const text =
-            stripTags(
-              r.dialogue
-            );
-
-          const digitMatches = [
-            ...text.matchAll(
-              /\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi
-            )
-          ];
-
-          digitMatches.forEach(
-            m => {
-
-              const value =
-                parseInt(
-                  m[0]
-                    .replace(/,/g, '')
-                    .replace(/[^\d]/g, '')
-                );
-
-              const index =
-                m.index;
-
-              if (
-                isProtectedName(
-                  text,
-                  m[0]
-                )
-              ) {
-                return;
-              }
-
-              if (
-                isMetricContext(
-                  text,
-                  index
-                )
-              ) {
-                return;
-              }
-
-              if (
-                isTimeContext(
-                  text,
-                  index
-                )
-              ) {
-
-                if (
-                  /o'clock/i.test(
-                    text.slice(index)
-                  )
-                ) {
-
-                  errs.push(
-                    `Number should be spelled out: ${m[0]} o'clock`
-                  );
-
-                  allErrorsSet.add(
-                    'Number treatment'
-                  );
-
-                }
-
-                return;
-
-              }
-
-              const before =
-                text.slice(
-                  0,
-                  index
-                ).trim();
-
-              if (
-                before === ''
-              ) {
-
-                errs.push(
-                  `First word number must be spelled out: ${m[0]}`
-                );
-
-                allErrorsSet.add(
-                  'Number treatment'
-                );
-
-                return;
-
-              }
-
-              if (
-                value >= 1 &&
-                value <= 10
-              ) {
-
-                errs.push(
-                  `1-10 must be spelled out: ${m[0]}`
-                );
-
-                allErrorsSet.add(
-                  'Number treatment'
-                );
-
-              }
-
-            }
-          );
-
-
-          const wordMatches = [
-            ...text.matchAll(
-              numberWordsRegex()
-            )
-          ];
-
-          wordMatches.forEach(
-            m => {
-
-              const value =
-                wordNumberToValue(
-                  m[0]
-                );
-
-              if (
-                value === null
-              ) {
-                return;
-              }
-
-              const index =
-                m.index;
-
-              if (
-                /^\s*o'clock/i.test(
-                  text.slice(
-                    index +
-                    m[0].length
-                  )
-                )
-              ) {
-                return;
-              }
-
-              const before =
-                text.slice(
-                  0,
-                  index
-                ).trim();
-
-              if (
-                before === ''
-              ) {
-                return;
-              }
-
-              if (
-                isMetricContext(
-                  text,
-                  index +
-                  m[0].length
-                )
-              ) {
-                return;
-              }
-
-              if (
-                value >= 11
-              ) {
-
-                errs.push(
-                  `11+ must use numerals: ${m[0]}`
-                );
-
-                allErrorsSet.add(
-                  'Number treatment'
-                );
-
-              }
-
-            }
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_maxlines2'
-          ) &&
-          lines.length > 2
-        ) {
-
-          errs.push(
-            `Lines: ${lines.length}`
-          );
-
-          allErrorsSet.add(
-            'Too many lines'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'pccw_maxline1'
-          ) &&
-          lines.length > 1
-        ) {
-
-          errs.push(
-            `PCCW Lines: ${lines.length}`
-          );
-
-          allErrorsSet.add(
-            'PCCW Exceeded 1 line'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'wbd_char37'
-          )
-        ) {
-
-          const maxFound =
-            Math.max(
-              ...lines.map(
-                l => stripTags(l).length
-              )
-            );
-
-          if (
-            maxFound > 37
-          ) {
-
-            errs.push(
-              `WBD Over limit: ${maxFound}ch`
-            );
-
-            allErrorsSet.add(
-              'WBD Char limit 37'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'coup_char42'
-          )
-        ) {
-
-          const maxFound =
-            Math.max(
-              ...lines.map(
-                l => stripTags(l).length
-              )
-            );
-
-          if (
-            maxFound > 42
-          ) {
-
-            errs.push(
-              `Coupang Over limit: ${maxFound}ch`
-            );
-
-            allErrorsSet.add(
-              'Coupang Char limit 42'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'net_char42'
-          )
-        ) {
-
-          const maxFound =
-            Math.max(
-              ...lines.map(
-                l => stripTags(l).length
-              )
-            );
-
-          if (
-            maxFound > 42
-          ) {
-
-            errs.push(
-              `Netflix Over limit: ${maxFound}ch`
-            );
-
-            allErrorsSet.add(
-              'Netflix Char limit 42'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'pccw_char75'
-          )
-        ) {
-
-          const maxFound =
-            Math.max(
-              ...lines.map(
-                l => stripTags(l).length
-              )
-            );
-
-          if (
-            maxFound > 75
-          ) {
-
-            errs.push(
-              `PCCW Over limit: ${maxFound}ch`
-            );
-
-            allErrorsSet.add(
-              'PCCW Char limit 75'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_mergeable'
-          ) &&
-          lines.length === 2
-        ) {
-
-          const line1Clean =
-            stripTags(
-              lines[0]
-            ).trim();
-
-          const line2Clean =
-            stripTags(
-              lines[1]
-            ).trim();
-
-          if (
-            !line1Clean.startsWith('-')
-          ) {
-
-            const totalMerged =
-              line1Clean.length +
-              line2Clean.length +
-              1;
-
-            const currentLimit =
-              isChecked(
-                'coup_char42'
-              ) ||
-              isChecked(
-                'net_char42'
-              )
-                ? 42
-                : isChecked(
-                    'pccw_char75'
-                  )
-                    ? 75
-                    : 37;
-
-            if (
-              totalMerged <=
-              currentLimit
-            ) {
-
-              errs.push(
-                `Mergeable (${totalMerged}ch)`
-              );
-
-              allErrorsSet.add(
-                'Mergeable to 1 line'
-              );
-
-            }
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'gen_hypcon'
-          ) &&
-          lines.length === 2
-        ) {
-
-          const l1h =
-            /^-/.test(
-              lines[0].trim()
-            );
-
-          const l2h =
-            /^-/.test(
-              lines[1].trim()
-            );
-
-          if (
-            l1h !== l2h
-          ) {
-
-            errs.push(
-              'Hyphen inconsistency'
-            );
-
-            allErrorsSet.add(
-              'Hyphen inconsistency'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'coup_hyp_space'
-          ) &&
-          lines.some(
-            l => /^-[^\s]/.test(
-              l.trim()
-            )
-          )
-        ) {
-
-          errs.push(
-            'Coupang Hyphen missing space'
-          );
-
-          allErrorsSet.add(
-            'Coupang Hyphen missing space'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'wbd_hyp_space'
-          ) &&
-          lines.some(
-            l => /^-[^\s]/.test(
-              l.trim()
-            )
-          )
-        ) {
-
-          errs.push(
-            'WBD Hyphen missing space'
-          );
-
-          allErrorsSet.add(
-            'WBD Hyphen missing space'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'net_hyp_nospace'
-          ) &&
-          lines.some(
-            l => /^-\s/.test(
-              l.trim()
-            )
-          )
-        ) {
-
-          errs.push(
-            'Netflix Space after hyphen'
-          );
-
-          allErrorsSet.add(
-            'Netflix Space after hyphen'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'wbd_comma_det'
-          )
-        ) {
-
-          const lastLine =
-            lines[
-              lines.length - 1
-            ]?.trimEnd() || '';
-
-          if (
-            lastLine.endsWith(',')
-          ) {
-
-            errs.push(
-              'WBD Ends with comma'
-            );
-
-            allErrorsSet.add(
-              'WBD Trailing comma'
-            );
-
-          }
-
-        }
-
-
-        if (
-          isChecked(
-            'pccw_end_punct'
-          )
-        ) {
-
-          const validPunctRegex =
-            /[.,?!\)]\s*$/;
-
-          if (
-            !validPunctRegex.test(
-              cleanDialogue
-            )
-          ) {
-
-            errs.push(
-              'PCCW No ending punctuation'
-            );
-
-            allErrorsSet.add(
-              'PCCW Missing punctuation'
-            );
-
-          }
-
-        }
-
-
-        /*
-          GROUP 4:
-          ANY italic text is an error.
-
-          This includes:
-          - partial italics
-          - entire-cell italics
-        */
-        if (
-          isChecked(
-            'pccw_noitalics'
-          ) &&
-          r.hasItalics
-        ) {
-
-          errs.push(
-            'PCCW Italics detected'
-          );
-
-          allErrorsSet.add(
-            'PCCW Italics detected'
-          );
-
-        }
-
-
-        /*
-          GROUP 2:
-          Only partial italics with italicized punctuation
-          are errors.
-
-          Entire-cell italics are deliberately excluded.
-        */
-        if (
-          isChecked(
-            'coup_partial_italics'
-          ) &&
-          !r.entireCellItalic &&
-          r.italicPunctuation.length > 0
-        ) {
-
-          errs.push(
-            `Partial italics punctuation: ${r.italicPunctuation.join(', ')}`
-          );
-
-          allErrorsSet.add(
-            'Partial italics punctuation'
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'pccw_ampm'
-          )
-        ) {
-
-          const text =
-            stripTags(
-              r.dialogue
-            );
-
-          const matches =
-            text.match(
-              /\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/gi
-            ) || [];
-
-          matches.forEach(
-            t => {
-
-              if (
-                !/^\d{1,2}(?::\d{2})?(am|pm)$/i.test(
-                  t
-                )
-              ) {
-
-                errs.push(
-                  `PCCW time format error: ${t}`
-                );
-
-                allErrorsSet.add(
-                  'PCCW am/pm format'
-                );
-
-              }
-
-            }
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'pccw_hyphen_middle'
-          )
-        ) {
-
-          lines.forEach(
-            line => {
-
-              const trimmed =
-                line.trim();
-
-              if (
-                /^-/.test(trimmed) &&
-                !trimmed.includes(' - ')
-              ) {
-
-                errs.push(
-                  'PCCW Dialogue exchange requires " - "'
-                );
-
-                allErrorsSet.add(
-                  'PCCW Hyphen exchange format'
-                );
-
-              }
-
-            }
-          );
-
-        }
-
-
-        if (
-          isChecked(
-            'pccw_uppercase'
-          )
-        ) {
-
-          const letters =
-            cleanDialogue.match(
-              /[A-Za-z]/g
-            );
-
-          if (
-            letters &&
-            letters.length > 0 &&
-            letters.every(
-              ch =>
-                ch ===
-                ch.toUpperCase()
-            )
-          ) {
-
-            errs.push(
-              'PCCW All uppercase'
-            );
-
-            allErrorsSet.add(
-              'PCCW All uppercase'
-            );
-
-          }
 
         }
 
       }
 
     }
-  );
 
+
+    /* ---------------------------------------------
+       DURATION
+       --------------------------------------------- */
+
+    if (
+      durF != null &&
+      durS != null
+    ) {
+
+      if (
+        isChecked('coup_mindur20') &&
+        durF < 20
+      ) {
+
+        errs.push(
+          'Coupang Short: < 20f'
+        );
+
+        allErrorsSet.add(
+          'Coupang Short (< 20f)'
+        );
+
+      }
+
+      if (
+        isChecked('coup_mindur25') &&
+        durF < 25
+      ) {
+
+        errs.push(
+          'Coupang Short: < 25f'
+        );
+
+        allErrorsSet.add(
+          'Coupang Short (< 25f)'
+        );
+
+      }
+
+      if (
+        isChecked('wbd_mindur1s') &&
+        durS < 1.0
+      ) {
+
+        errs.push(
+          'WBD Short: < 1s'
+        );
+
+        allErrorsSet.add(
+          'WBD Short (< 1s)'
+        );
+
+      }
+
+      if (
+        isChecked('pccw_mindur1s') &&
+        durS < 1.0
+      ) {
+
+        errs.push(
+          'PCCW Short: < 1s'
+        );
+
+        allErrorsSet.add(
+          'PCCW Short (< 1s)'
+        );
+
+      }
+
+      if (
+        isChecked('net_mindur1s') &&
+        durS < 1.0
+      ) {
+
+        errs.push(
+          'Netflix Short: < 1s'
+        );
+
+        allErrorsSet.add(
+          'Netflix Short (< 1s)'
+        );
+
+      }
+
+      if (
+        isChecked('coup_maxdur6s') &&
+        durS > 6.0
+      ) {
+
+        errs.push(
+          'Coupang Long: > 6s'
+        );
+
+        allErrorsSet.add(
+          'Coupang Long (> 6s)'
+        );
+
+      }
+
+      if (
+        isChecked('pccw_maxdur6s') &&
+        durS > 6.0
+      ) {
+
+        errs.push(
+          'PCCW Long: > 6s'
+        );
+
+        allErrorsSet.add(
+          'PCCW Long (> 6s)'
+        );
+
+      }
+
+      if (
+        isChecked('wbd_maxdur8s') &&
+        durS > 8.0
+      ) {
+
+        errs.push(
+          'WBD Long: > 8s'
+        );
+
+        allErrorsSet.add(
+          'WBD Long (> 8s)'
+        );
+
+      }
+
+      if (
+        isChecked('net_maxdur8s') &&
+        durS > 8.0
+      ) {
+
+        errs.push(
+          'Netflix Long: > 8s'
+        );
+
+        allErrorsSet.add(
+          'Netflix Long (> 8s)'
+        );
+
+      }
+
+    }
+
+
+    /* ---------------------------------------------
+       EMPTY LINE
+       --------------------------------------------- */
+
+    if (
+      isChecked('gen_emptyline') &&
+      r.dialogue.trim() === ''
+    ) {
+
+      errs.push(
+        'Empty dialogue'
+      );
+
+      allErrorsSet.add(
+        'Empty dialogue'
+      );
+
+    }
+
+
+    if (lines.length > 0) {
+
+      const cleanDialogue =
+        stripTags(
+          r.dialogue
+        ).trim();
+
+
+      /* ---------------------------------------------
+         GENERAL TEXT RULES
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_curlya') &&
+        /[\u2018\u2019\u201A\u201B]/.test(
+          r.dialogue
+        )
+      ) {
+
+        errs.push(
+          'Curly apostrophe'
+        );
+
+        allErrorsSet.add(
+          'Curly apostrophe'
+        );
+
+      }
+
+
+      if (
+        isChecked('gen_multispc') &&
+        / {2,}/.test(
+          r.dialogue
+        )
+      ) {
+
+        errs.push(
+          'Multiple spaces'
+        );
+
+        allErrorsSet.add(
+          'Multiple spaces'
+        );
+
+      }
+
+
+      if (
+        isChecked('gen_leadtrail') &&
+        lines.some(
+          l => l !== l.trim()
+        )
+      ) {
+
+        errs.push(
+          'Lead/trail space'
+        );
+
+        allErrorsSet.add(
+          'Leading/trailing space'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         WBD DOUBLE HYPHENS
+         --------------------------------------------- */
+
+      if (
+        isChecked('wbd_doublehyp') &&
+        /--/.test(r.dialogue)
+      ) {
+
+        errs.push(
+          'WBD Double hyphens'
+        );
+
+        allErrorsSet.add(
+          'WBD Double hyphens (--)'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         DOTS
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_dotseq')
+      ) {
+
+        const dots =
+          r.dialogue.match(
+            /\.{2,}/g
+          ) || [];
+
+        const bad =
+          dots.filter(
+            s => s.length !== 3
+          );
+
+        if (
+          bad.length > 0
+        ) {
+
+          errs.push(
+            `Dots: ${bad.join(',')}`
+          );
+
+          allErrorsSet.add(
+            'Invalid dot sequence'
+          );
+
+        }
+
+      }
+
+
+      /* ---------------------------------------------
+         GENERAL A.M./P.M.
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_ampm')
+      ) {
+
+        const text =
+          stripTags(
+            r.dialogue
+          );
+
+        const matches =
+          text.match(
+            /\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
+          ) || [];
+
+        matches.forEach(t => {
+
+          const normalized =
+            t.replace(
+              /\s+/g,
+              ' '
+            ).trim();
+
+          const correct =
+            normalized.replace(
+              /\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
+              (m, x) => {
+
+                const period =
+                  x
+                    .toLowerCase()
+                    .replace(/\./g, '')
+                    .replace(/\s/g, '');
+
+                return ' ' +
+                  (
+                    period === 'am'
+                      ? 'a.m.'
+                      : 'p.m.'
+                  );
+
+              }
+            );
+
+          if (
+            normalized !== correct
+          ) {
+
+            errs.push(
+              `Incorrect a.m./p.m. format: ${t}`
+            );
+
+            allErrorsSet.add(
+              'Incorrect a.m./p.m. format'
+            );
+
+          }
+
+        });
+
+      }
+
+
+      /* ---------------------------------------------
+         PERCENT
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_percent') &&
+        /%/.test(r.dialogue)
+      ) {
+
+        errs.push(
+          'Percent sign must be spelled out: %'
+        );
+
+        allErrorsSet.add(
+          'Percent sign (%)'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         NUMBER TREATMENT
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_numtreat')
+      ) {
+
+        const text =
+          stripTags(
+            r.dialogue
+          );
+
+        const digitMatches = [
+          ...text.matchAll(
+            /\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi
+          )
+        ];
+
+        digitMatches.forEach(m => {
+
+          const value =
+            parseInt(
+              m[0]
+                .replace(/,/g, '')
+                .replace(/[^\d]/g, '')
+            );
+
+          const index =
+            m.index;
+
+          if (
+            isProtectedName(
+              text,
+              m[0]
+            )
+          ) {
+            return;
+          }
+
+          if (
+            isMetricContext(
+              text,
+              index
+            )
+          ) {
+            return;
+          }
+
+          if (
+            isTimeContext(
+              text,
+              index
+            )
+          ) {
+
+            if (
+              /o'clock/i.test(
+                text.slice(index)
+              )
+            ) {
+
+              errs.push(
+                `Number should be spelled out: ${m[0]} o'clock`
+              );
+
+              allErrorsSet.add(
+                'Number treatment'
+              );
+
+            }
+
+            return;
+
+          }
+
+          const before =
+            text.slice(
+              0,
+              index
+            ).trim();
+
+          if (
+            before === ''
+          ) {
+
+            errs.push(
+              `First word number must be spelled out: ${m[0]}`
+            );
+
+            allErrorsSet.add(
+              'Number treatment'
+            );
+
+            return;
+
+          }
+
+          if (
+            value >= 1 &&
+            value <= 10
+          ) {
+
+            errs.push(
+              `1-10 must be spelled out: ${m[0]}`
+            );
+
+            allErrorsSet.add(
+              'Number treatment'
+            );
+
+          }
+
+        });
+
+
+        const wordMatches = [
+          ...text.matchAll(
+            numberWordsRegex()
+          )
+        ];
+
+        wordMatches.forEach(m => {
+
+          const value =
+            wordNumberToValue(
+              m[0]
+            );
+
+          if (
+            value === null
+          ) {
+            return;
+          }
+
+          const index =
+            m.index;
+
+          if (
+            /^\s*o'clock/i.test(
+              text.slice(
+                index + m[0].length
+              )
+            )
+          ) {
+            return;
+          }
+
+          const before =
+            text.slice(
+              0,
+              index
+            ).trim();
+
+          if (
+            before === ''
+          ) {
+            return;
+          }
+
+          if (
+            isMetricContext(
+              text,
+              index + m[0].length
+            )
+          ) {
+            return;
+          }
+
+          if (
+            value >= 11
+          ) {
+
+            errs.push(
+              `11+ must use numerals: ${m[0]}`
+            );
+
+            allErrorsSet.add(
+              'Number treatment'
+            );
+
+          }
+
+        });
+
+      }
+
+
+      /* ---------------------------------------------
+         LINE COUNT
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_maxlines2') &&
+        lines.length > 2
+      ) {
+
+        errs.push(
+          `Lines: ${lines.length}`
+        );
+
+        allErrorsSet.add(
+          'Too many lines'
+        );
+
+      }
+
+
+      if (
+        isChecked('pccw_maxline1') &&
+        lines.length > 1
+      ) {
+
+        errs.push(
+          `PCCW Lines: ${lines.length}`
+        );
+
+        allErrorsSet.add(
+          'PCCW Exceeded 1 line'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         CHARACTER LIMITS
+         --------------------------------------------- */
+
+      if (
+        isChecked('wbd_char37')
+      ) {
+
+        const maxFound =
+          Math.max(
+            ...lines.map(
+              l => stripTags(l).length
+            )
+          );
+
+        if (
+          maxFound > 37
+        ) {
+
+          errs.push(
+            `WBD Over limit: ${maxFound}ch`
+          );
+
+          allErrorsSet.add(
+            'WBD Char limit 37'
+          );
+
+        }
+
+      }
+
+
+      if (
+        isChecked('coup_char42')
+      ) {
+
+        const maxFound =
+          Math.max(
+            ...lines.map(
+              l => stripTags(l).length
+            )
+          );
+
+        if (
+          maxFound > 42
+        ) {
+
+          errs.push(
+            `Coupang Over limit: ${maxFound}ch`
+          );
+
+          allErrorsSet.add(
+            'Coupang Char limit 42'
+          );
+
+        }
+
+      }
+
+
+      if (
+        isChecked('net_char42')
+      ) {
+
+        const maxFound =
+          Math.max(
+            ...lines.map(
+              l => stripTags(l).length
+            )
+          );
+
+        if (
+          maxFound > 42
+        ) {
+
+          errs.push(
+            `Netflix Over limit: ${maxFound}ch`
+          );
+
+          allErrorsSet.add(
+            'Netflix Char limit 42'
+          );
+
+        }
+
+      }
+
+
+      if (
+        isChecked('pccw_char75')
+      ) {
+
+        const maxFound =
+          Math.max(
+            ...lines.map(
+              l => stripTags(l).length
+            )
+          );
+
+        if (
+          maxFound > 75
+        ) {
+
+          errs.push(
+            `PCCW Over limit: ${maxFound}ch`
+          );
+
+          allErrorsSet.add(
+            'PCCW Char limit 75'
+          );
+
+        }
+
+      }
+
+
+      /* ---------------------------------------------
+         MERGEABLE
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_mergeable') &&
+        lines.length === 2
+      ) {
+
+        const line1Clean =
+          stripTags(
+            lines[0]
+          ).trim();
+
+        const line2Clean =
+          stripTags(
+            lines[1]
+          ).trim();
+
+        if (
+          !line1Clean.startsWith('-')
+        ) {
+
+          const totalMerged =
+            line1Clean.length +
+            line2Clean.length +
+            1;
+
+          const currentLimit =
+            isChecked('coup_char42') ||
+            isChecked('net_char42')
+              ? 42
+              : isChecked('pccw_char75')
+                ? 75
+                : 37;
+
+          if (
+            totalMerged <= currentLimit
+          ) {
+
+            errs.push(
+              `Mergeable (${totalMerged}ch)`
+            );
+
+            allErrorsSet.add(
+              'Mergeable to 1 line'
+            );
+
+          }
+
+        }
+
+      }
+
+
+      /* ---------------------------------------------
+         GENERAL HYPHEN CONSISTENCY
+         --------------------------------------------- */
+
+      if (
+        isChecked('gen_hypcon') &&
+        lines.length === 2
+      ) {
+
+        const l1h =
+          /^-/.test(
+            lines[0].trim()
+          );
+
+        const l2h =
+          /^-/.test(
+            lines[1].trim()
+          );
+
+        if (
+          l1h !== l2h
+        ) {
+
+          errs.push(
+            'Hyphen inconsistency'
+          );
+
+          allErrorsSet.add(
+            'Hyphen inconsistency'
+          );
+
+        }
+
+      }
+
+
+      /* ---------------------------------------------
+         COUPANG HYPHEN
+         --------------------------------------------- */
+
+      if (
+        isChecked('coup_hyp_space') &&
+        lines.some(
+          l => /^-[^\s]/.test(
+            l.trim()
+          )
+        )
+      ) {
+
+        errs.push(
+          'Coupang Hyphen missing space'
+        );
+
+        allErrorsSet.add(
+          'Coupang Hyphen missing space'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         WBD HYPHEN
+         --------------------------------------------- */
+
+      if (
+        isChecked('wbd_hyp_space') &&
+        lines.some(
+          l => /^-[^\s]/.test(
+            l.trim()
+          )
+        )
+      ) {
+
+        errs.push(
+          'WBD Hyphen missing space'
+        );
+
+        allErrorsSet.add(
+          'WBD Hyphen missing space'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         NETFLIX HYPHEN
+         --------------------------------------------- */
+
+      if (
+        isChecked('net_hyp_nospace') &&
+        lines.some(
+          l => /^-\s/.test(
+            l.trim()
+          )
+        )
+      ) {
+
+        errs.push(
+          'Netflix Space after hyphen'
+        );
+
+        allErrorsSet.add(
+          'Netflix Space after hyphen'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         WBD COMMA
+         --------------------------------------------- */
+
+      if (
+        isChecked('wbd_comma_det')
+      ) {
+
+        const lastLine =
+          lines[
+            lines.length - 1
+          ]?.trimEnd() || '';
+
+        if (
+          lastLine.endsWith(',')
+        ) {
+
+          errs.push(
+            'WBD Ends with comma'
+          );
+
+          allErrorsSet.add(
+            'WBD Trailing comma'
+          );
+
+        }
+
+      }
+
+
+      /* ---------------------------------------------
+         PCCW ENDING PUNCTUATION
+         --------------------------------------------- */
+
+      if (
+        isChecked('pccw_end_punct')
+      ) {
+
+        const validPunctRegex =
+          /[.,?!\)]\s*$/;
+
+        if (
+          !validPunctRegex.test(
+            cleanDialogue
+          )
+        ) {
+
+          errs.push(
+            'PCCW No ending punctuation'
+          );
+
+          allErrorsSet.add(
+            'PCCW Missing punctuation'
+          );
+
+        }
+
+      }
+
+
+      /* =================================================
+         GROUP 4 - PCCW NO ITALICS
+
+         IMPORTANT:
+         This now uses r.hasItalics, which detects BOTH:
+         1. partial/rich-text italics
+         2. entire-cell italic formatting
+         ================================================= */
+
+      if (
+        isChecked('pccw_noitalics') &&
+        r.hasItalics
+      ) {
+
+        errs.push(
+          'PCCW Italics detected'
+        );
+
+        allErrorsSet.add(
+          'PCCW Italics detected'
+        );
+
+      }
+
+
+      /* =================================================
+         GROUP 2 - PARTIAL ITALICS PUNCTUATION
+
+         Entire-cell italic formatting is excluded.
+         Partial italic punctuation remains unchanged.
+         ================================================= */
+
+      if (
+        isChecked('coup_partial_italics') &&
+        !r.entireCellItalic &&
+        r.italicPunctuation.length > 0
+      ) {
+
+        errs.push(
+          `Partial italics punctuation: ${r.italicPunctuation.join(', ')}`
+        );
+
+        allErrorsSet.add(
+          'Partial italics punctuation'
+        );
+
+      }
+
+
+      /* ---------------------------------------------
+         PCCW A.M./P.M.
+         --------------------------------------------- */
+
+      if (
+        isChecked('pccw_ampm')
+      ) {
+
+        const text =
+          stripTags(
+            r.dialogue
+          );
+
+        const matches =
+          text.match(
+            /\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/gi
+          ) || [];
+
+        matches.forEach(t => {
+
+          if (
+            !/^\d{1,2}(?::\d{2})?(am|pm)$/i.test(t)
+          ) {
+
+            errs.push(
+              `PCCW time format error: ${t}`
+            );
+
+            allErrorsSet.add(
+              'PCCW am/pm format'
+            );
+
+          }
+
+        });
+
+      }
+
+
+      /* ---------------------------------------------
+         PCCW HYPHEN MIDDLE
+         --------------------------------------------- */
+
+      if (
+        isChecked('pccw_hyphen_middle')
+      ) {
+
+        lines.forEach(line => {
+
+          const trimmed =
+            line.trim();
+
+          if (
+            /^-/.test(trimmed) &&
+            !trimmed.includes(' - ')
+          ) {
+
+            errs.push(
+              'PCCW Dialogue exchange requires " - "'
+            );
+
+            allErrorsSet.add(
+              'PCCW Hyphen exchange format'
+            );
+
+          }
+
+        });
+
+      }
+
+
+      /* ---------------------------------------------
+         PCCW UPPERCASE
+         --------------------------------------------- */
+
+      if (
+        isChecked('pccw_uppercase')
+      ) {
+
+        const letters =
+          cleanDialogue.match(
+            /[A-Za-z]/g
+          );
+
+        if (
+          letters &&
+          letters.length > 0 &&
+          letters.every(
+            ch =>
+              ch === ch.toUpperCase()
+          )
+        ) {
+
+          errs.push(
+            'PCCW All uppercase'
+          );
+
+          allErrorsSet.add(
+            'PCCW All uppercase'
+          );
+
+        }
+
+      }
+
+    }
+
+  });
+
+
+  /* =====================================================
+     TRANSLATOR CREDIT
+     ===================================================== */
 
   if (
-    isChecked(
-      'gen_credit'
-    ) &&
+    isChecked('gen_credit') &&
     processed.length > 0
   ) {
 
@@ -3042,8 +2479,7 @@ function runChecks() {
 
       const lastDuration =
         framesToSec(
-          last.endF -
-          last.startF,
+          last.endF - last.startF,
           fps
         );
 
@@ -3078,88 +2514,82 @@ function runChecks() {
   }
 
 
-  processed.forEach(
-    r => {
+  /* =====================================================
+     CPS
+     ===================================================== */
 
-      const rsv =
-        parseFloat(r.rs);
+  processed.forEach(r => {
+
+    const rsv =
+      parseFloat(r.rs);
+
+    if (
+      !isNaN(rsv)
+    ) {
 
       if (
-        !isNaN(rsv)
+        isChecked('coup_rs20') &&
+        rsv > 20
       ) {
 
-        if (
-          isChecked(
-            'coup_rs20'
-          ) &&
-          rsv > 20
-        ) {
+        r.errors.push(
+          'Coupang CPS > 20'
+        );
 
-          r.errors.push(
-            'Coupang CPS > 20'
-          );
+        allErrorsSet.add(
+          'Coupang CPS > 20'
+        );
 
-          allErrorsSet.add(
-            'Coupang CPS > 20'
-          );
+      }
 
-        }
+      if (
+        isChecked('coup_rs30') &&
+        rsv > 30
+      ) {
 
-        if (
-          isChecked(
-            'coup_rs30'
-          ) &&
-          rsv > 30
-        ) {
+        r.errors.push(
+          'Coupang CPS > 30'
+        );
 
-          r.errors.push(
-            'Coupang CPS > 30'
-          );
+        allErrorsSet.add(
+          'Coupang CPS > 30'
+        );
 
-          allErrorsSet.add(
-            'Coupang CPS > 30'
-          );
+      }
 
-        }
+      if (
+        isChecked('wbd_rs30') &&
+        rsv > 30
+      ) {
 
-        if (
-          isChecked(
-            'wbd_rs30'
-          ) &&
-          rsv > 30
-        ) {
+        r.errors.push(
+          'WBD CPS > 30'
+        );
 
-          r.errors.push(
-            'WBD CPS > 30'
-          );
+        allErrorsSet.add(
+          'WBD CPS > 30'
+        );
 
-          allErrorsSet.add(
-            'WBD CPS > 30'
-          );
+      }
 
-        }
+      if (
+        isChecked('net_rs30') &&
+        rsv > 30
+      ) {
 
-        if (
-          isChecked(
-            'net_rs30'
-          ) &&
-          rsv > 30
-        ) {
+        r.errors.push(
+          'Netflix CPS > 30'
+        );
 
-          r.errors.push(
-            'Netflix CPS > 30'
-          );
-
-          allErrorsSet.add(
-            'Netflix CPS > 30'
-          );
-
-        }
+        allErrorsSet.add(
+          'Netflix CPS > 30'
+        );
 
       }
 
     }
-  );
+
+  });
 
 
   renderResults(
@@ -3169,6 +2599,10 @@ function runChecks() {
 
 }
 
+
+/* =========================================================
+   RESULTS
+   ========================================================= */
 
 function renderResults(
   data,
@@ -3188,12 +2622,10 @@ function renderResults(
     block: 'start'
   });
 
-
   const errorCount =
     data.filter(
       r => r.errors.length > 0
     ).length;
-
 
   const totalIssues =
     data.reduce(
@@ -3202,21 +2634,17 @@ function renderResults(
       0
     );
 
-
   document.getElementById(
     'stats-row'
   ).innerHTML = `
 
     <div class="stat-box">
-
       <div class="val">
         ${data.length}
       </div>
-
       <div class="lbl">
         Total Subs
       </div>
-
     </div>
 
     <div class="stat-box ${
@@ -3263,26 +2691,21 @@ function renderResults(
     '<option value="all">All error types</option>';
 
 
-  [
-    ...allErrorsSet
-  ]
+  [...allErrorsSet]
     .sort()
-    .forEach(
-      e => {
+    .forEach(e => {
 
-        const opt =
-          document.createElement(
-            'option'
-          );
+      const opt =
+        document.createElement(
+          'option'
+        );
 
-        opt.value = e;
+      opt.value = e;
+      opt.textContent = e;
 
-        opt.textContent = e;
+      etf.appendChild(opt);
 
-        etf.appendChild(opt);
-
-      }
-    );
+    });
 
 
   window._tableData =
@@ -3292,6 +2715,10 @@ function renderResults(
 
 }
 
+
+/* =========================================================
+   FILTER
+   ========================================================= */
 
 function applyFilter() {
 
@@ -3312,7 +2739,6 @@ function applyFilter() {
 
   tbody.innerHTML = '';
 
-
   let visible =
     window._tableData || [];
 
@@ -3323,7 +2749,8 @@ function applyFilter() {
 
     visible =
       visible.filter(
-        r => r.errors.length > 0
+        r =>
+          r.errors.length > 0
       );
 
   }
@@ -3339,10 +2766,9 @@ function applyFilter() {
           r.errors.some(
             e =>
               e.includes(etFilter) ||
-              e.toLowerCase()
-                .includes(
-                  etFilter.toLowerCase()
-                )
+              e.toLowerCase().includes(
+                etFilter.toLowerCase()
+              )
           )
       );
 
@@ -3388,7 +2814,6 @@ function applyFilter() {
           'tr'
         );
 
-
       if (
         r.errors.length > 0
       ) {
@@ -3410,9 +2835,11 @@ function applyFilter() {
 
 
       /*
-        dialogueHtml contains the preserved italic
-        formatting, including whole-cell italics.
-      */
+       * IMPORTANT:
+       * dialogueHtml is generated from the original
+       * rich-text cell, so partial italic formatting
+       * remains visually italicized in the report.
+       */
       const dialogueHtml =
         r.dialogueHtml ||
         escHtml(
@@ -3459,16 +2886,17 @@ function applyFilter() {
 
       `;
 
-
-      tbody.appendChild(
-        tr
-      );
+      tbody.appendChild(tr);
 
     }
   );
 
 }
 
+
+/* =========================================================
+   RESET
+   ========================================================= */
 
 function resetAll() {
 
@@ -3477,11 +2905,13 @@ function resetAll() {
 }
 
 
-buildCheckboxes();
+/* =========================================================
+   INIT
+   ========================================================= */
 
+buildCheckboxes();
 setupDrop();
 
 </script>
-
 </body>
 </html>
