@@ -426,7 +426,7 @@ function loadFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      workbook = XLSX.read(e.target.result, { type:'array', raw:false });
+      workbook = XLSX.read(e.target.result, { type:'array', raw:false, cellStyles:true, cellNF:true });
       document.getElementById('run-btn').disabled = false;
     } catch (err) { alert("Error reading file."); }
   };
@@ -454,7 +454,9 @@ function runChecks() {
   const processed = rows.map((row, idx) => {
     const startTs = row[1] != null ? String(row[1]).trim() : '';
     const endTs   = row[2] != null ? String(row[2]).trim() : '';
-    const dialogue= row[4] != null ? String(row[4]) : '';
+    const dialogue = row[4] != null ? String(row[4]) : '';
+const dialogueCell = sheet[XLSX.utils.encode_cell({ r: idx + skip, c: 4 })];
+const hasItalic = !!(dialogueCell && dialogueCell.s && dialogueCell.s.font && dialogueCell.s.font.italic);
     const startF  = tsToFrames(startTs, fps);
     const endF    = tsToFrames(endTs, fps);
     
@@ -464,7 +466,7 @@ function runChecks() {
         const cleanText = stripTags(dialogue).replace(/\s+/g, '');
         rs = (cleanText.length / framesToSec(durF, fps)).toFixed(1);
     }
-    return { rowNum: idx+skip+1, startTs, endTs, dialogue, rs, startF, endF, errors:[] };
+    return { rowNum: idx+skip+1, startTs, endTs, dialogue, rs, startF, endF, hasItalic, errors:[] };
   }).filter(r => r.startTs || r.endTs || r.dialogue);
 
   processed.forEach((r, i) => {
@@ -645,9 +647,9 @@ if (isChecked('gen_numtreat')) {
       }
 
       // Style Mechanics
-      if (isChecked('pccw_noitalics') && /<i>|<\/i>/i.test(r.dialogue)) {
-        errs.push('PCCW Italics detected'); allErrorsSet.add('PCCW Italics forbidden');
-      }
+if (isChecked('pccw_noitalics') && r.hasItalic) {
+  errs.push('PCCW Italics detected'); allErrorsSet.add('PCCW Italics forbidden');
+}
 
 // ===== STRICT pccw_ampm CHECK (Group 4, Rule #7) =====
 if (isChecked('pccw_ampm')) {
