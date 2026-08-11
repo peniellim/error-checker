@@ -6,74 +6,79 @@
 <title>Subtitle Error Checker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
-.page{max-width:1300px;margin:0 auto;padding:2rem 1.5rem}
-h1{font-size:22px;font-weight:600;margin-bottom:.25rem}
-.subtitle-text{font-size:13px;color:#666;margin-bottom:1.5rem}
-.card{background:#fff;border:.5px solid #ddd;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
-.card-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:1rem}
-.row{display:flex;gap:1.25rem;flex-wrap:wrap;align-items:flex-start}
-.upload-area{border:2px dashed #ccc;border-radius:10px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#fafafa}
-.upload-area:hover,.upload-area.drag-over{border-color:#5c5fef;background:#f0f0ff}
-.upload-area input[type=file]{display:none}
-.upload-icon{font-size:32px;margin-bottom:.5rem}
-.upload-label{font-size:14px;color:#555}
-.upload-label strong{color:#5c5fef;cursor:pointer}
-.file-name{margin-top:.75rem;font-size:13px;color:#5c5fef;font-weight:500}
-select{padding:.45rem .75rem;border:.5px solid #ccc;border-radius:8px;font-size:14px;background:#fff;cursor:pointer}
-.groups-container{display:flex;flex-direction:column;gap:1.5rem;margin-bottom:1.5rem}
-.group-section{border-bottom:1px dashed #eee;padding-bottom:1rem}
-.group-section:last-child{border-bottom:none;padding-bottom:0}
-.group-heading{font-size:14px;font-weight:700;color:#444;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
-.group-heading span{font-size:11px;background:#e2e2db;padding:1px 6px;border-radius:10px;color:#555}
-.checks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:.4rem}
-.check-item{display:flex;align-items:flex-start;gap:.6rem;padding:.4rem .6rem;border-radius:8px;cursor:pointer;transition:background .15s;user-select:none}
-.check-item:hover{background:#f5f5f0}
-.check-item input[type=checkbox]{margin-top:3px;accent-color:#5c5fef;width:15px;height:15px;flex-shrink:0;cursor:pointer}
-.check-num{font-size:13px;color:#666;min-width:18px}
-.check-label{font-size:13.5px;color:#333;line-height:1.4}
-.empty-group-text{font-size:13px;color:#999;font-style:italic;padding-left:.6rem}
-.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.4rem;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s,transform .1s}
-.btn:active{transform:scale(.98)}
-.btn-primary{background:#5c5fef;color:#fff}
-.btn-primary:hover{opacity:.88}
-.btn-primary:disabled{background:#bbb;cursor:not-allowed}
-.btn-secondary{background:#f0f0f0;color:#444;border:.5px solid #ccc}
-.btn-secondary:hover{background:#e8e8e8}
-.controls-row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-top:1rem;border-top:.5px solid #ddd;padding-top:1.25rem}
-.stats-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
-.stat-box{background:#f5f5f0;border-radius:8px;padding:.6rem 1rem;min-width:120px}
-.stat-box .val{font-size:20px;font-weight:600}
-.stat-box .lbl{font-size:12px;color:#888}
-.stat-box.err .val{color:#c0392b}
-.stat-box.warn .val{color:#d97706}
-.stat-box.ok .val{color:#16a34a}
-#results-area{display:none}
-.results-table-wrap{overflow-x:auto;border-radius:10px;border:.5px solid #ddd}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:#f5f5f0;padding:.6rem .75rem;text-align:left;font-weight:600;font-size:12px;color:#666;border-bottom:.5px solid #ddd;white-space:nowrap;position:sticky;top:0;z-index:1}
-tbody td{padding:.55rem .75rem;border-bottom:.5px solid #eee;vertical-align:top}
-tbody tr:last-child td{border-bottom:none}
-tbody tr.has-error{background:#fff8e1}
-tbody tr.has-error:hover{background:#fff3cd}
-tbody tr:not(.has-error):hover{background:#fafafa}
-.error-tags{display:flex;flex-wrap:wrap;gap:4px}
-.etag{display:inline-block;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;background:#fde8e8;color:#c0392b;border:.5px solid #f5c6c6;white-space:nowrap}
-.dialogue-cell{white-space:pre-wrap;max-width:360px;word-break:break-word}
-.no-errors{text-align:center;padding:3rem;color:#888}
-.no-errors .big{font-size:32px;margin-bottom:.5rem}
-.filter-row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
-.filter-row label{font-size:13px;color:#555}
-.filter-row select{font-size:13px}
-.toggle-all{font-size:13px;color:#5c5fef;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0}
-.hint{font-size:12px;color:#aaa;margin-top:.25rem}
-.ts{font-family:monospace;font-size:12px;color:#555;white-space:nowrap}
-.rs{font-size:12px}
-@media(max-width:700px){.checks-grid{grid-template-columns:1fr}.row{flex-direction:column}}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+.page { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 0.25rem; }
+.subtitle-text { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+.card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+.card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 1rem; }
+.row { display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-start; }
+.upload-area { border: 2px dashed #ccc; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: #fafafa; }
+.upload-area:hover, .upload-area.drag-over { border-color: #5c5fef; background: #f0f0ff; }
+.upload-area input[type=file] { display: none; }
+.upload-icon { font-size: 32px; margin-bottom: 0.5rem; }
+.upload-label { font-size: 14px; color: #555; }
+.upload-label strong { color: #5c5fef; cursor: pointer; }
+.file-name { margin-top: 0.75rem; font-size: 13px; color: #5c5fef; font-weight: 500; }
+select { padding: 0.45rem 0.75rem; border: 0.5px solid #ccc; border-radius: 8px; font-size: 14px; background: #fff; cursor: pointer; }
+.groups-container { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 1.5rem; }
+.group-section { border-bottom: 1px dashed #eee; padding-bottom: 1rem; }
+.group-section:last-child { border-bottom: none; padding-bottom: 0; }
+.group-heading { font-size: 14px; font-weight: 700; color: #444; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+.group-heading span { font-size: 11px; background: #e2e2db; padding: 1px 6px; border-radius: 10px; color: #555; }
+.checks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 0.4rem; }
+.check-item { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; transition: background 0.15s; user-select: none; }
+.check-item:hover { background: #f5f5f0; }
+.check-item input[type=checkbox] { margin-top: 3px; accent-color: #5c5fef; width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.check-num { font-size: 13px; color: #777; min-width: 18px; }
+.check-label { font-size: 13.5px; color: #333; line-height: 1.4; }
+.empty-group-text { font-size: 13px; color: #999; font-style: italic; padding-left: 0.6rem; }
+.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.4rem; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s, transform 0.1s; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: #5c5fef; color: #fff; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+.btn-secondary { background: #f0f0f0; color: #444; border: 0.5px solid #ccc; }
+.btn-secondary:hover { background: #e8e8e8; }
+.controls-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; border-top: 0.5px solid #ddd; padding-top: 1.25rem; }
+.stats-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.stat-box { background: #f5f5f0; border-radius: 8px; padding: 0.6rem 1rem; min-width: 120px; }
+.stat-box .val { font-size: 20px; font-weight: 600; }
+.stat-box .lbl { font-size: 12px; color: #888; }
+.stat-box.err .val { color: #c0392b; }
+.stat-box.warn .val { color: #d97706; }
+.stat-box.ok .val { color: #16a34a; }
+#results-area { display: none; }
+.results-table-wrap { overflow-x: auto; border-radius: 10px; border: 0.5px solid #ddd; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: #f5f5f0; padding: 0.6rem 0.75rem; text-align: left; font-weight: 600; font-size: 12px; color: #666; border-bottom: 0.5px solid #ddd; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+tbody td { padding: 0.55rem 0.75rem; border-bottom: 0.5px solid #eee; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr.has-error { background: #fff8e1; }
+tbody tr.has-error:hover { background: #fff3cd; }
+tbody tr:not(.has-error):hover { background: #fafafa; }
+.error-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.etag { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 5px; background: #fde8e8; color: #c0392b; border: 0.5px solid #f5c6c6; white-space: nowrap; }
+.dialogue-cell { white-space: pre-wrap; max-width: 500px; min-width: 250px; word-break: break-word; line-height: 1.5; }
+.dialogue-cell i, .dialogue-cell em { font-style: italic; }
+.dialogue-cell b, .dialogue-cell strong { font-weight: 700; }
+.dialogue-cell u { text-decoration: underline; }
+.no-errors { text-align: center; padding: 3rem; color: #888; }
+.no-errors .big { font-size: 32px; margin-bottom: 0.5rem; }
+.filter-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.filter-row label { font-size: 13px; color: #555; }
+.filter-row select { font-size: 13px; }
+.toggle-all { font-size: 13px; color: #5c5fef; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+.hint { font-size: 12px; color: #aaa; margin-top: 0.25rem; }
+.ts { font-family: monospace; font-size: 12px; color: #555; white-space: nowrap; }
+.rs { font-size: 12px; }
+@media (max-width: 700px) {
+  .checks-grid { grid-template-columns: 1fr; }
+  .row { flex-direction: column; }
+}
 </style>
 </head>
-
 <body>
 <div class="page">
   <h1>Subtitle Error Checker</h1>
@@ -90,10 +95,9 @@ tbody tr:not(.has-error):hover{background:#fafafa}
           <div class="file-name" id="file-name-display"></div>
         </div>
       </div>
-
-      <div style="display:flex;flex-direction:column;gap:.75rem;min-width:200px;">
+      <div style="display:flex;flex-direction:column;gap:0.75rem;min-width:200px;">
         <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:.4rem;">Frame rate</div>
+          <div style="font-size:13px;font-weight:500;margin-bottom:0.4rem;">Frame rate</div>
           <select id="fps-select">
             <option value="23.976">23.976 fps</option>
             <option value="24">24 fps</option>
@@ -105,15 +109,13 @@ tbody tr:not(.has-error):hover{background:#fafafa}
             <option value="60">60 fps</option>
           </select>
         </div>
-
         <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:.4rem;">Sheet (tab name or number)</div>
-          <input id="sheet-input" type="text" placeholder="Leave blank for first sheet" style="padding:.45rem .75rem;border:.5px solid #ccc;border-radius:8px;font-size:14px;width:100%;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:0.4rem;">Sheet (tab name or number)</div>
+          <input id="sheet-input" type="text" placeholder="Leave blank for first sheet" style="padding:0.45rem 0.75rem;border:0.5px solid #ccc;border-radius:8px;font-size:14px;width:100%;">
         </div>
-
         <div>
-          <div style="font-size:13px;font-weight:500;margin-bottom:.4rem;">Header rows to skip</div>
-          <input id="skip-rows" type="number" value="1" min="0" max="10" style="padding:.45rem .75rem;border:.5px solid #ccc;border-radius:8px;font-size:14px;width:80px;">
+          <div style="font-size:13px;font-weight:500;margin-bottom:0.4rem;">Header rows to skip</div>
+          <input id="skip-rows" type="number" value="1" min="0" max="10" style="padding:0.45rem 0.75rem;border:0.5px solid #ccc;border-radius:8px;font-size:14px;width:80px;">
           <p class="hint">Default: 1 row (row 1 = header)</p>
         </div>
       </div>
@@ -123,7 +125,7 @@ tbody tr:not(.has-error):hover{background:#fafafa}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
       <div class="card-title" style="margin:0;">Checks to run</div>
-      <div style="display:flex;gap:.75rem;">
+      <div style="display:flex;gap:0.75rem;">
         <button class="toggle-all" onclick="toggleAll(true)">Select all</button>
         <button class="toggle-all" onclick="toggleAll(false)">Deselect all</button>
       </div>
@@ -140,20 +142,17 @@ tbody tr:not(.has-error):hover{background:#fafafa}
   <div id="results-area">
     <div class="card" style="padding:1rem 1.5rem;">
       <div class="stats-row" id="stats-row"></div>
-
       <div class="filter-row">
         <label>Filter:</label>
         <select id="filter-select" onchange="applyFilter()">
           <option value="all">Show all rows</option>
           <option value="errors">Errors only</option>
         </select>
-
-        <label style="margin-left:.5rem;">Error type:</label>
+        <label style="margin-left:0.5rem;">Error type:</label>
         <select id="error-type-filter" onchange="applyFilter()">
           <option value="all">All error types</option>
         </select>
       </div>
-
       <div class="results-table-wrap">
         <table id="results-table">
           <thead>
@@ -176,98 +175,97 @@ tbody tr:not(.has-error):hover{background:#fafafa}
 
 <script>
 const GROUPS = [
-  { key:'General', label:'General' },
-  { key:'Coupang', label:'Coupang' },
-  { key:'WBD', label:'WBD' },
-  { key:'PCCW', label:'PCCW' },
-  { key:'CJENM', label:'CJENM' },
-  { key:'Netflix', label:'Netflix' }
+  { key: 'General', label: 'General' },
+  { key: 'Coupang', label: 'Coupang' },
+  { key: 'WBD', label: 'WBD' },
+  { key: 'PCCW', label: 'PCCW' },
+  { key: 'CJENM', label: 'CJENM' },
+  { key: 'Netflix', label: 'Netflix' }
 ];
 
 const CHECKS = [
-  { id:'gen_gap2', group:'General', label:'Min 2-frame gap', defaultOn:true },
-  { id:'gen_overlap', group:'General', label:'Subtitle Overlaps', defaultOn:true },
-  { id:'gen_curlya', group:'General', label:'Curly apostrophe', defaultOn:true },
-  { id:'gen_multispc', group:'General', label:'Multiple spaces', defaultOn:true },
-  { id:'gen_emptyline', group:'General', label:'Empty line', defaultOn:true },
-  { id:'gen_leadtrail', group:'General', label:'Leading/trailing space', defaultOn:true },
-  { id:'gen_dotseq', group:'General', label:'Invalid dots (not 1 or 3)', defaultOn:true },
-  { id:'gen_mergeable', group:'General', label:'Fit to 1 line (mergeable)', defaultOn:true },
-  { id:'gen_maxlines2', group:'General', label:'Maximum 2 lines', defaultOn:true },
-  { id:'gen_hypcon', group:'General', label:'Hyphen for 2 speakers', defaultOn:true },
-  { id:'gen_numtreat', group:'General', label:'Number treatment', defaultOn:true },
-  { id:'gen_ampm', group:'General', label:'Time: a.m./p.m. with space', defaultOn:true },
-  { id:'gen_percent', group:'General', label:'Percent', defaultOn:true },
-  { id:'gen_credit', group:'General', label:"Translator's credit", defaultOn:true },
+  { id: 'gen_gap2', group: 'General', label: 'Min 2-frame gap', defaultOn: true },
+  { id: 'gen_overlap', group: 'General', label: 'Subtitle Overlaps', defaultOn: true },
+  { id: 'gen_curlya', group: 'General', label: 'Curly apostrophe', defaultOn: true },
+  { id: 'gen_multispc', group: 'General', label: 'Multiple spaces', defaultOn: true },
+  { id: 'gen_emptyline', group: 'General', label: 'Empty line', defaultOn: true },
+  { id: 'gen_leadtrail', group: 'General', label: 'Leading/trailing space', defaultOn: true },
+  { id: 'gen_dotseq', group: 'General', label: 'Invalid dots (not 1 or 3)', defaultOn: true },
+  { id: 'gen_mergeable', group: 'General', label: 'Fit to 1 line (mergeable)', defaultOn: true },
+  { id: 'gen_maxlines2', group: 'General', label: 'Maximum 2 lines', defaultOn: true },
+  { id: 'gen_hypcon', group: 'General', label: 'Hyphen for 2 speakers', defaultOn: true },
+  { id: 'gen_numtreat', group: 'General', label: 'Number treatment', defaultOn: true },
+  { id: 'gen_ampm', group: 'General', label: 'Time: a.m./p.m. with space', defaultOn: true },
+  { id: 'gen_percent', group: 'General', label: 'Percent: spell out %', defaultOn: true },
+  { id: 'gen_credit', group: 'General', label: "Translator's credit", defaultOn: true },
 
-  { id:'coup_mindur20', group:'Coupang', label:'Min duration 20 frames', defaultOn:true },
-  { id:'coup_mindur25', group:'Coupang', label:'Min duration 25 frames', defaultOn:true },
-  { id:'coup_maxdur6s', group:'Coupang', label:'Max duration 6 seconds', defaultOn:true },
-  { id:'coup_hyp_space', group:'Coupang', label:'Spacing after hyphen', defaultOn:true },
-  { id:'coup_ital_punct', group:'Coupang', label:'Partial italics', defaultOn:true },
-  { id:'coup_char42', group:'Coupang', label:'Character limit: 42', defaultOn:true },
-  { id:'coup_rs20', group:'Coupang', label:'Over 20 CPS', defaultOn:true },
-  { id:'coup_rs30', group:'Coupang', label:'Over 30 CPS', defaultOn:true },
+  { id: 'coup_mindur20', group: 'Coupang', label: 'Min duration 20 frames', defaultOn: true },
+  { id: 'coup_mindur25', group: 'Coupang', label: 'Min duration 25 frames', defaultOn: true },
+  { id: 'coup_maxdur6s', group: 'Coupang', label: 'Max duration 6 seconds', defaultOn: true },
+  { id: 'coup_hyp_space', group: 'Coupang', label: 'Spacing after hyphen', defaultOn: true },
+  { id: 'coup_char42', group: 'Coupang', label: 'Character limit: 42', defaultOn: true },
+  { id: 'coup_rs20', group: 'Coupang', label: 'Over 20 CPS', defaultOn: true },
+  { id: 'coup_rs30', group: 'Coupang', label: 'Over 30 CPS', defaultOn: true },
+  { id: 'coup_partial_italics', group: 'Coupang', label: 'Partial italics punctuation', defaultOn: true },
 
-  { id:'wbd_mindur1s', group:'WBD', label:'Min duration 1 second', defaultOn:true },
-  { id:'wbd_maxdur8s', group:'WBD', label:'Max duration of 8 seconds', defaultOn:true },
-  { id:'wbd_hyp_space', group:'WBD', label:'Spacing after hyphen', defaultOn:true },
-  { id:'wbd_comma_det', group:'WBD', label:'Last line ends with comma', defaultOn:true },
-  { id:'wbd_doublehyp', group:'WBD', label:'Double hyphens', defaultOn:true },
-  { id:'wbd_char37', group:'WBD', label:'Character limit: 37', defaultOn:true },
-  { id:'wbd_rs30', group:'WBD', label:'Over 30 CPS', defaultOn:true },
+  { id: 'wbd_mindur1s', group: 'WBD', label: 'Min duration 1 second', defaultOn: true },
+  { id: 'wbd_maxdur8s', group: 'WBD', label: 'Max duration of 8 seconds', defaultOn: true },
+  { id: 'wbd_hyp_space', group: 'WBD', label: 'Spacing after hyphen', defaultOn: true },
+  { id: 'wbd_comma_det', group: 'WBD', label: 'Last line ends with comma', defaultOn: true },
+  { id: 'wbd_doublehyp', group: 'WBD', label: 'Double hyphens', defaultOn: true },
+  { id: 'wbd_char37', group: 'WBD', label: 'Character limit: 37', defaultOn: true },
+  { id: 'wbd_rs30', group: 'WBD', label: 'Over 30 CPS', defaultOn: true },
 
-  { id:'pccw_mindur1s', group:'PCCW', label:'Min duration 1 second', defaultOn:true },
-  { id:'pccw_maxdur6s', group:'PCCW', label:'Max duration 6 seconds', defaultOn:true },
-  { id:'pccw_char75', group:'PCCW', label:'Character limit: 75', defaultOn:true },
-  { id:'pccw_maxline1', group:'PCCW', label:'Maximum 1 line', defaultOn:true },
-  { id:'pccw_noitalics', group:'PCCW', label:'No italics', defaultOn:true },
-  { id:'pccw_end_punct', group:'PCCW', label:'Ending punctuation', defaultOn:true },
-  { id:'pccw_ampm', group:'PCCW', label:'Time: am/pm without space', defaultOn:true },
-  { id:'pccw_uppercase', group:'PCCW', label:'All uppercase', defaultOn:true },
+  { id: 'pccw_mindur1s', group: 'PCCW', label: 'Min duration 1 second', defaultOn: true },
+  { id: 'pccw_maxdur6s', group: 'PCCW', label: 'Max duration 6 seconds', defaultOn: true },
+  { id: 'pccw_char75', group: 'PCCW', label: 'Character limit: 75', defaultOn: true },
+  { id: 'pccw_maxline1', group: 'PCCW', label: 'Maximum 1 line', defaultOn: true },
+  { id: 'pccw_noitalics', group: 'PCCW', label: 'No italics', defaultOn: true },
+  { id: 'pccw_end_punct', group: 'PCCW', label: 'Ending punctuation', defaultOn: true },
+  { id: 'pccw_ampm', group: 'PCCW', label: 'Time: am/pm without space', defaultOn: true },
+  { id: 'pccw_hyphen_middle', group: 'PCCW', label: 'Hyphen for dialogue exchange', defaultOn: true },
+  { id: 'pccw_uppercase', group: 'PCCW', label: 'All uppercase', defaultOn: true },
 
-  { id:'net_mindur1s', group:'Netflix', label:'Min duration 1 second', defaultOn:true },
-  { id:'net_maxdur8s', group:'Netflix', label:'Max duration 8 seconds', defaultOn:true },
-  { id:'net_hypcon', group:'Netflix', label:'Hyphen for 2 speakers', defaultOn:true },
-  { id:'net_hyp_nospace', group:'Netflix', label:'No spacing after hyphen', defaultOn:true },
-  { id:'net_char42', group:'Netflix', label:'Character limit: 42', defaultOn:true },
-  { id:'net_rs30', group:'Netflix', label:'Over 30 CPS', defaultOn:true }
+  { id: 'net_mindur1s', group: 'Netflix', label: 'Min duration 1 second', defaultOn: true },
+  { id: 'net_maxdur8s', group: 'Netflix', label: 'Max duration 8 seconds', defaultOn: true },
+  { id: 'net_hypcon', group: 'Netflix', label: 'Hyphen for 2 speakers', defaultOn: true },
+  { id: 'net_hyp_nospace', group: 'Netflix', label: 'No spacing after hyphen', defaultOn: true },
+  { id: 'net_char42', group: 'Netflix', label: 'Character limit: 42', defaultOn: true },
+  { id: 'net_rs30', group: 'Netflix', label: 'Over 30 CPS', defaultOn: true }
 ];
 
 let workbook = null;
 window._tableData = [];
 
-function buildCheckboxes(){
-  const container=document.getElementById('groups-container');
-  if(!container)return;
-  container.innerHTML='';
+function buildCheckboxes() {
+  const container = document.getElementById('groups-container');
+  if (!container) return;
+  container.innerHTML = '';
 
-  GROUPS.forEach((g,gIdx)=>{
-    const groupSection=document.createElement('div');
-    groupSection.className='group-section';
+  GROUPS.forEach((g, gIdx) => {
+    const groupSection = document.createElement('div');
+    groupSection.className = 'group-section';
 
-    const heading=document.createElement('div');
-    heading.className='group-heading';
-    heading.innerHTML=`Group ${gIdx+1}: ${g.label}`;
+    const heading = document.createElement('div');
+    heading.className = 'group-heading';
+    heading.innerHTML = `Group ${gIdx + 1}: ${g.label}`;
     groupSection.appendChild(heading);
 
-    const groupChecks=CHECKS.filter(c=>c.group===g.key);
+    const groupChecks = CHECKS.filter(c => c.group === g.key);
 
-    if(groupChecks.length===0){
-      const emptyText=document.createElement('div');
-      emptyText.className='empty-group-text';
-      emptyText.textContent='(None for now. To be updated soon)';
+    if (groupChecks.length === 0) {
+      const emptyText = document.createElement('div');
+      emptyText.className = 'empty-group-text';
+      emptyText.textContent = '(None for now. To be updated soon)';
       groupSection.appendChild(emptyText);
-    }else{
-      const grid=document.createElement('div');
-      grid.className='checks-grid';
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'checks-grid';
 
-      groupChecks.forEach((c,cIdx)=>{
-        const div=document.createElement('label');
-        div.className='check-item';
-        div.innerHTML=`<input type="checkbox" id="chk_${c.id}" ${c.defaultOn?'checked':''}>
-        <span class="check-num">${cIdx+1}.</span>
-        <span class="check-label">${c.label}</span>`;
+      groupChecks.forEach((c, cIdx) => {
+        const div = document.createElement('label');
+        div.className = 'check-item';
+        div.innerHTML = `<input type="checkbox" id="chk_${c.id}" ${c.defaultOn ? 'checked' : ''}><span class="check-num">${cIdx + 1}.</span><span class="check-label">${c.label}</span>`;
         grid.appendChild(div);
       });
 
@@ -278,152 +276,110 @@ function buildCheckboxes(){
   });
 }
 
-function toggleAll(on){
-  CHECKS.forEach(c=>{
-    const el=document.getElementById('chk_'+c.id);
-    if(el)el.checked=on;
+function toggleAll(on) {
+  CHECKS.forEach(c => {
+    const el = document.getElementById('chk_' + c.id);
+    if (el) el.checked = on;
   });
 }
 
-function isChecked(id){
-  return document.getElementById('chk_'+id)?.checked;
+function isChecked(id) {
+  return document.getElementById('chk_' + id)?.checked;
 }
 
-function stripTags(text){
-  return text?String(text).replace(/<\/?[^>]+(>|$)/g,''):'';
+function stripTags(text) {
+  return text ? String(text).replace(/<\/?[^>]+(>|$)/g, '') : '';
 }
 
-function tsToFrames(val,fps){
-  if(val==null||val==='')return null;
-  const str=String(val).trim();
-  const parts=str.split(':');
-  if(parts.length<4)return null;
-
-  const h=parseInt(parts[0])||0;
-  const m=parseInt(parts[1])||0;
-  const s=parseInt(parts[2])||0;
-  const f=parseInt(parts[3])||0;
-
-  return Math.round((h*3600+m*60+s)*fps+f);
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
-function framesToSec(frames,fps){
-  return frames/fps;
+function tsToFrames(val, fps) {
+  if (val == null || val === '') return null;
+
+  const str = String(val).trim();
+  const parts = str.split(':');
+
+  if (parts.length < 4) return null;
+
+  const h = parseInt(parts[0]) || 0;
+  const m = parseInt(parts[1]) || 0;
+  const s = parseInt(parts[2]) || 0;
+  const f = parseInt(parts[3]) || 0;
+
+  return Math.round((h * 3600 + m * 60 + s) * fps + f);
 }
 
-function getLines(text){
-  return text?String(text).split(/\r?\n/):[];
-}
-  function sanitizeRichText(html, fallback) {
-  if (!html) return escHtml(fallback || '').replace(/\r?\n/g, '<br>');
-  return html
-    .replace(/<(?!\/?(?:i|em|b|strong|u|br)\b)[^>]*>/gi, '')
-    .replace(/<\s*(i|em|b|strong|u|br)(?:\s[^>]*)?>/gi, '<$1>')
-    .replace(/<\/\s*(i|em|b|strong|u)\s*>/gi, '</$1>');
+function framesToSec(frames, fps) {
+  return frames / fps;
 }
 
-function cellHasItalic(cell){
-  if(!cell)return false;
-  const html=cell.h||'';
-  return /<i(?:\s[^>]*)?>/i.test(html);
+function getLines(text) {
+  return text ? String(text).split(/\r?\n/) : [];
 }
 
-function decodeHtml(text){
-  const textarea=document.createElement('textarea');
-  textarea.innerHTML=text;
-  return textarea.value;
-}
-
-function hasItalicPunctuation(cell){
-  if(!cell||!cell.h)return false;
-
-  const html=cell.h;
-  const italicRuns=[
-    ...html.matchAll(/<i(?:\s[^>]*)?>([\s\S]*?)<\/i>/gi)
-  ];
-
-  const punctuation=/[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/;
-
-  return italicRuns.some(match=>{
-    const runText=decodeHtml(
-      match[1].replace(/<[^>]+>/g,'')
-    );
-
-    return punctuation.test(runText);
-  });
-}
-
-function isAllUppercase(text){
-  const clean=stripTags(text||'');
-  const letters=[...clean].filter(ch=>/\p{L}/u.test(ch));
-
-  if(letters.length===0)return false;
-
-  return letters.every(ch=>{
-    return ch===ch.toUpperCase() && ch!==ch.toLowerCase();
-  });
-}
-
-const SMALL_NUMBERS={
-  zero:0,one:1,two:2,three:3,four:4,five:5,
-  six:6,seven:7,eight:8,nine:9,ten:10,
-  eleven:11,twelve:12,thirteen:13,fourteen:14,
-  fifteen:15,sixteen:16,seventeen:17,eighteen:18,
-  nineteen:19
+const SMALL_NUMBERS = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5,
+  six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14,
+  fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+  nineteen: 19
 };
 
-const TENS={
-  twenty:20,thirty:30,forty:40,fifty:50,
-  sixty:60,seventy:70,eighty:80,ninety:90
+const TENS = {
+  twenty: 20, thirty: 30, forty: 40, fifty: 50,
+  sixty: 60, seventy: 70, eighty: 80, ninety: 90
 };
 
-const SCALES={
-  hundred:100,
-  thousand:1000,
-  million:1000000,
-  billion:1000000000
+const SCALES = {
+  hundred: 100,
+  thousand: 1000,
+  million: 1000000,
+  billion: 1000000000
 };
 
-function wordNumberToValue(words){
-  words=words
+function wordNumberToValue(words) {
+  words = words
     .toLowerCase()
-    .replace(/-/g,' ')
-    .replace(/\band\b/g,' ')
+    .replace(/-/g, ' ')
+    .replace(/\band\b/g, ' ')
     .trim()
     .split(/\s+/);
 
-  let total=0;
-  let current=0;
-  let found=false;
+  let total = 0;
+  let current = 0;
+  let found = false;
 
-  for(const w of words){
-    if(SMALL_NUMBERS[w]!==undefined){
-      current+=SMALL_NUMBERS[w];
-      found=true;
-    }else if(TENS[w]){
-      current+=TENS[w];
-      found=true;
-    }else if(w==='hundred'){
-      current*=100;
-      found=true;
-    }else if(SCALES[w]){
-      total+=current*SCALES[w];
-      current=0;
-      found=true;
-    }else{
+  for (const w of words) {
+    if (SMALL_NUMBERS[w] !== undefined) {
+      current += SMALL_NUMBERS[w];
+      found = true;
+    } else if (TENS[w]) {
+      current += TENS[w];
+      found = true;
+    } else if (w === 'hundred') {
+      current *= 100;
+      found = true;
+    } else if (SCALES[w]) {
+      total += current * SCALES[w];
+      current = 0;
+      found = true;
+    } else {
       return null;
     }
   }
 
-  return found?total+current:null;
+  return found ? total + current : null;
 }
 
-function isWrittenNumber(wordGroup){
-  return wordNumberToValue(wordGroup)!==null;
-}
-
-function numberWordsRegex(){
-  const nums=[
+function numberWordsRegex() {
+  const nums = [
     ...Object.keys(SMALL_NUMBERS),
     ...Object.keys(TENS),
     ...Object.keys(SCALES),
@@ -431,78 +387,215 @@ function numberWordsRegex(){
   ];
 
   return new RegExp(
-    '\\b('+nums.join('|')+')(?:[- ](?:'+nums.join('|')+'))*\\b',
+    '\\b(' +
+    nums.join('|') +
+    ')(?:[- ](?:' +
+    nums.join('|') +
+    '))*\\b',
     'gi'
   );
 }
 
-function isMetricContext(text,index){
-  const after=text.slice(index).match(
+function isMetricContext(text, index) {
+  const after = text.slice(index).match(
     /^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i
   );
 
   return !!after;
 }
 
-function isTimeContext(text,index){
-  const after=text.slice(index);
+function isTimeContext(text, index) {
+  const after = text.slice(index);
 
   return (
     /^\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i.test(after) ||
-    /^\s*(?:am|pm)\b/i.test(after) ||
     /^\s*o'clock\b/i.test(after)
   );
 }
 
-function isProtectedName(text,match){
-  const protectedPatterns=[
+function isProtectedName(text, match) {
+  const protectedPatterns = [
     /apollo\s+\d+/i,
     /catch-\d+/i,
     /room\s+\d+/i,
     /formula\s+\d+/i
   ];
 
-  return protectedPatterns.some(r=>r.test(match));
+  return protectedPatterns.some(r => r.test(match));
 }
 
-function setupDrop(){
-  const dz=document.getElementById('drop-zone');
-  const fi=document.getElementById('file-input');
+function parseHtml(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div id="root">${html || ''}</div>`, 'text/html');
+  return doc.getElementById('root');
+}
 
-  dz.addEventListener('dragover',e=>{
+function isItalicElement(el) {
+  if (!el || el.nodeType !== 1) return false;
+
+  const tag = el.tagName.toLowerCase();
+
+  if (tag === 'i' || tag === 'em') return true;
+
+  const style = el.getAttribute('style') || '';
+
+  return /font-style\s*:\s*italic/i.test(style);
+}
+
+function hasItalicFormatting(html) {
+  if (!html) return false;
+
+  const root = parseHtml(html);
+
+  if (isItalicElement(root)) return true;
+
+  return [...root.querySelectorAll('*')].some(isItalicElement);
+}
+
+function findItalicPunctuation(html) {
+  if (!html) return [];
+
+  const root = parseHtml(html);
+  const punctuation = /[.,!?;:"'()\[\]{}\-…]/g;
+  const found = [];
+
+  function walk(node, italicActive) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (italicActive) {
+        const matches = node.nodeValue.match(punctuation);
+        if (matches) found.push(...matches);
+      }
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    const italicHere = italicActive || isItalicElement(node);
+
+    [...node.childNodes].forEach(child => {
+      walk(child, italicHere);
+    });
+  }
+
+  [...root.childNodes].forEach(node => walk(node, false));
+
+  return [...new Set(found)];
+}
+
+function sanitizeRichHtml(html, fallbackText) {
+  if (!html) {
+    return escHtml(fallbackText || '').replace(/\r?\n/g, '<br>');
+  }
+
+  const root = parseHtml(html);
+
+  function serialize(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return escHtml(node.nodeValue);
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return '';
+    }
+
+    const tag = node.tagName.toLowerCase();
+
+    if (tag === 'br') {
+      return '<br>';
+    }
+
+    const content = [...node.childNodes].map(serialize).join('');
+    const italic = isItalicElement(node);
+
+    if (italic) {
+      return `<i>${content}</i>`;
+    }
+
+    if (tag === 'b' || tag === 'strong') {
+      return `<strong>${content}</strong>`;
+    }
+
+    if (tag === 'u') {
+      return `<u>${content}</u>`;
+    }
+
+    if (tag === 'p' || tag === 'div') {
+      return content + '<br>';
+    }
+
+    return content;
+  }
+
+  let result = [...root.childNodes].map(serialize).join('');
+
+  result = result.replace(/(<br>)+$/i, '');
+
+  return result || escHtml(fallbackText || '').replace(/\r?\n/g, '<br>');
+}
+
+function getRichDialogueFromCell(cell, fallbackText) {
+  if (!cell) {
+    return {
+      html: sanitizeRichHtml('', fallbackText),
+      hasItalics: false,
+      italicPunctuation: []
+    };
+  }
+
+  const html = cell.h || '';
+
+  return {
+    html: sanitizeRichHtml(html, fallbackText),
+    hasItalics: hasItalicFormatting(html),
+    italicPunctuation: findItalicPunctuation(html)
+  };
+}
+
+function setupDrop() {
+  const dz = document.getElementById('drop-zone');
+  const fi = document.getElementById('file-input');
+
+  dz.addEventListener('dragover', e => {
     e.preventDefault();
     dz.classList.add('drag-over');
   });
 
-  dz.addEventListener('dragleave',()=>{
+  dz.addEventListener('dragleave', () => {
     dz.classList.remove('drag-over');
   });
 
-  dz.addEventListener('drop',e=>{
+  dz.addEventListener('drop', e => {
     e.preventDefault();
     dz.classList.remove('drag-over');
 
-    if(e.dataTransfer.files[0]){
+    if (e.dataTransfer.files[0]) {
       loadFile(e.dataTransfer.files[0]);
     }
   });
 
-  fi.addEventListener('change',()=>{
-    if(fi.files[0])loadFile(fi.files[0]);
+  fi.addEventListener('change', () => {
+    if (fi.files[0]) {
+      loadFile(fi.files[0]);
+    }
   });
 }
 
-function loadFile(file){
-  document.getElementById('file-name-display').textContent=file.name;
+function loadFile(file) {
+  document.getElementById('file-name-display').textContent = file.name;
 
-  const reader=new FileReader();
+  const reader = new FileReader();
 
-  reader.onload=e=>{
-    try{
-      workbook = XLSX.read(e.target.result, { type:'array', raw:false, cellHTML:true });
+  reader.onload = e => {
+    try {
+      workbook = XLSX.read(e.target.result, {
+        type: 'array',
+        raw: false,
+        cellHTML: true,
+        cellStyles: true
+      });
 
-      document.getElementById('run-btn').disabled=false;
-    }catch(err){
+      document.getElementById('run-btn').disabled = false;
+    } catch (err) {
       alert('Error reading file.');
       console.error(err);
     }
@@ -511,212 +604,252 @@ function loadFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-function runChecks(){
-  if(!workbook)return;
+function runChecks() {
+  if (!workbook) return;
 
-  const fps=parseFloat(document.getElementById('fps-select').value);
-  const sheetInput=document.getElementById('sheet-input').value.trim();
-  const skip=parseInt(document.getElementById('skip-rows').value)||1;
+  const fps = parseFloat(document.getElementById('fps-select').value);
+  const sheetInput = document.getElementById('sheet-input').value.trim();
+  const skip = parseInt(document.getElementById('skip-rows').value) || 1;
 
-  let sheetName=sheetInput||workbook.SheetNames[0];
-  let sheet=workbook.Sheets[sheetName];
+  let sheetName = sheetInput || workbook.SheetNames[0];
+  let sheet = workbook.Sheets[sheetName];
 
-  if(!sheet){
-    const idx=parseInt(sheetInput)-1;
-    sheet=(!isNaN(idx)&&workbook.SheetNames[idx])
+  if (!sheet) {
+    const idx = parseInt(sheetInput) - 1;
+
+    sheet = (!isNaN(idx) && workbook.SheetNames[idx])
       ? workbook.Sheets[workbook.SheetNames[idx]]
       : workbook.Sheets[workbook.SheetNames[0]];
   }
 
-  const raw=XLSX.utils.sheet_to_json(sheet,{
-    header:1,
-    defval:''
+  const raw = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    defval: ''
   });
 
-  const rows=raw.slice(skip);
-  const allErrorsSet=new Set();
+  const rows = raw.slice(skip);
+  const allErrorsSet = new Set();
 
-  const processed=rows.map((row,idx)=>{
-    const startTs=row[1]!=null?String(row[1]).trim():'';
-    const endTs=row[2]!=null?String(row[2]).trim():'';
-const dialogue = row[4] != null ? String(row[4]) : '';
-const cellAddress = XLSX.utils.encode_cell({ r: idx + skip, c: 4 });
-const dialogueCell = sheet[cellAddress];
-const dialogueHtml = dialogueCell?.h || '';
-    const hasItalic=cellHasItalic(dialogueCell);
-    const italicPunct=hasItalicPunctuation(dialogueCell);
+  const processed = rows.map((row, idx) => {
+    const excelRow = idx + skip + 1;
 
-    const startF=tsToFrames(startTs,fps);
-    const endF=tsToFrames(endTs,fps);
+    const startTs = row[1] != null ? String(row[1]).trim() : '';
+    const endTs = row[2] != null ? String(row[2]).trim() : '';
+    const dialogue = row[4] != null ? String(row[4]) : '';
 
-    let rs='';
-    const durF=(startF!=null&&endF!=null)
-      ? endF-startF
-      : null;
+    const dialogueCell = sheet['E' + excelRow];
+    const rich = getRichDialogueFromCell(dialogueCell, dialogue);
 
-    if(durF&&durF>0){
-      const cleanText=stripTags(dialogue).replace(/\s+/g,'');
-      rs=(cleanText.length/framesToSec(durF,fps)).toFixed(1);
+    const startF = tsToFrames(startTs, fps);
+    const endF = tsToFrames(endTs, fps);
+
+    let rs = '';
+
+    const durF = (
+      startF != null &&
+      endF != null
+    ) ? endF - startF : null;
+
+    if (durF && durF > 0) {
+      const cleanText = stripTags(dialogue).replace(/\s+/g, '');
+      rs = (
+        cleanText.length /
+        framesToSec(durF, fps)
+      ).toFixed(1);
     }
 
-return { rowNum: idx+skip+1, startTs, endTs, dialogue, dialogueHtml, rs, startF, endF, errors:[] };
-  }).filter(r=>r.startTs||r.endTs||r.dialogue);
+    return {
+      rowNum: excelRow,
+      startTs,
+      endTs,
+      dialogue,
+      dialogueHtml: rich.html,
+      hasItalics: rich.hasItalics,
+      italicPunctuation: rich.italicPunctuation,
+      rs,
+      startF,
+      endF,
+      errors: []
+    };
+  }).filter(r => r.startTs || r.endTs || r.dialogue);
 
-  processed.forEach((r,i)=>{
-    const errs=r.errors;
-    const lines=getLines(r.dialogue);
-    const durF=(r.startF!=null&&r.endF!=null)
-      ? r.endF-r.startF
+  processed.forEach((r, i) => {
+    const errs = r.errors;
+    const lines = getLines(r.dialogue);
+    const durF = (
+      r.startF != null &&
+      r.endF != null
+    ) ? r.endF - r.startF : null;
+
+    const durS = durF != null
+      ? framesToSec(durF, fps)
       : null;
-    const durS=durF!=null?framesToSec(durF,fps):null;
 
-    if(i<processed.length-1){
-      const next=processed[i+1];
+    if (i < processed.length - 1) {
+      const next = processed[i + 1];
 
-      if(r.endF!=null&&next.startF!=null){
-        const gap=next.startF-r.endF;
+      if (r.endF != null && next.startF != null) {
+        const gap = next.startF - r.endF;
 
-        if(isChecked('gen_overlap')&&gap<0){
+        if (isChecked('gen_overlap') && gap < 0) {
           errs.push(`Overlap (${Math.abs(gap)}f)`);
           allErrorsSet.add('Overlap');
-        }else if(isChecked('gen_gap2')&&gap>=0&&gap<2){
+        } else if (isChecked('gen_gap2') && gap >= 0 && gap < 2) {
           errs.push(`Gap < 2f (${gap}f)`);
           allErrorsSet.add('Gap < 2 frames');
         }
       }
     }
 
-    if(durF!=null&&durS!=null){
-      if(isChecked('coup_mindur20')&&durF<20){
+    if (durF != null && durS != null) {
+      if (isChecked('coup_mindur20') && durF < 20) {
         errs.push('Coupang Short: < 20f');
         allErrorsSet.add('Coupang Short (< 20f)');
       }
 
-      if(isChecked('coup_mindur25')&&durF<25){
+      if (isChecked('coup_mindur25') && durF < 25) {
         errs.push('Coupang Short: < 25f');
         allErrorsSet.add('Coupang Short (< 25f)');
       }
 
-      if(isChecked('wbd_mindur1s')&&durS<1){
+      if (isChecked('wbd_mindur1s') && durS < 1.0) {
         errs.push('WBD Short: < 1s');
         allErrorsSet.add('WBD Short (< 1s)');
       }
 
-      if(isChecked('pccw_mindur1s')&&durS<1){
+      if (isChecked('pccw_mindur1s') && durS < 1.0) {
         errs.push('PCCW Short: < 1s');
         allErrorsSet.add('PCCW Short (< 1s)');
       }
 
-      if(isChecked('net_mindur1s')&&durS<1){
+      if (isChecked('net_mindur1s') && durS < 1.0) {
         errs.push('Netflix Short: < 1s');
         allErrorsSet.add('Netflix Short (< 1s)');
       }
 
-      if(isChecked('coup_maxdur6s')&&durS>6){
+      if (isChecked('coup_maxdur6s') && durS > 6.0) {
         errs.push('Coupang Long: > 6s');
         allErrorsSet.add('Coupang Long (> 6s)');
       }
 
-      if(isChecked('pccw_maxdur6s')&&durS>6){
+      if (isChecked('pccw_maxdur6s') && durS > 6.0) {
         errs.push('PCCW Long: > 6s');
         allErrorsSet.add('PCCW Long (> 6s)');
       }
 
-      if(isChecked('wbd_maxdur8s')&&durS>8){
+      if (isChecked('wbd_maxdur8s') && durS > 8.0) {
         errs.push('WBD Long: > 8s');
         allErrorsSet.add('WBD Long (> 8s)');
       }
 
-      if(isChecked('net_maxdur8s')&&durS>8){
+      if (isChecked('net_maxdur8s') && durS > 8.0) {
         errs.push('Netflix Long: > 8s');
         allErrorsSet.add('Netflix Long (> 8s)');
       }
     }
 
-    if(isChecked('gen_emptyline')&&r.dialogue.trim()===''){
+    if (isChecked('gen_emptyline') && r.dialogue.trim() === '') {
       errs.push('Empty dialogue');
       allErrorsSet.add('Empty dialogue');
     }
 
-    if(lines.length>0){
-      const cleanDialogue=stripTags(r.dialogue).trim();
+    if (lines.length > 0) {
+      const cleanDialogue = stripTags(r.dialogue).trim();
 
-      if(isChecked('gen_curlya')&&/[\u2018\u2019\u201A\u201B]/.test(r.dialogue)){
+      if (isChecked('gen_curlya') && /[\u2018\u2019\u201A\u201B]/.test(r.dialogue)) {
         errs.push('Curly apostrophe');
         allErrorsSet.add('Curly apostrophe');
       }
 
-      if(isChecked('gen_multispc')&&/ {2,}/.test(r.dialogue)){
+      if (isChecked('gen_multispc') && / {2,}/.test(r.dialogue)) {
         errs.push('Multiple spaces');
         allErrorsSet.add('Multiple spaces');
       }
 
-      if(isChecked('gen_leadtrail')&&lines.some(l=>l!==l.trim())){
+      if (isChecked('gen_leadtrail') && lines.some(l => l !== l.trim())) {
         errs.push('Lead/trail space');
         allErrorsSet.add('Leading/trailing space');
       }
 
-      if(isChecked('wbd_doublehyp')&&/--/.test(r.dialogue)){
+      if (isChecked('wbd_doublehyp') && /--/.test(r.dialogue)) {
         errs.push('WBD Double hyphens');
         allErrorsSet.add('WBD Double hyphens (--)');
       }
 
-      if(isChecked('gen_dotseq')){
-        const dots=r.dialogue.match(/\.{2,}/g)||[];
-        const bad=dots.filter(s=>s.length!==3);
+      if (isChecked('gen_dotseq')) {
+        const dots = r.dialogue.match(/\.{2,}/g) || [];
+        const bad = dots.filter(s => s.length !== 3);
 
-        if(bad.length>0){
+        if (bad.length > 0) {
           errs.push(`Dots: ${bad.join(',')}`);
           allErrorsSet.add('Invalid dot sequence');
         }
       }
 
-      if(isChecked('gen_ampm')){
-        const text=stripTags(r.dialogue);
+      if (isChecked('gen_ampm')) {
+        const text = stripTags(r.dialogue);
 
-        const matches=text.match(
+        const matches = text.match(
           /\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
-        )||[];
+        ) || [];
 
-        matches.forEach(t=>{
-          const normalized=t.trim();
+        matches.forEach(t => {
+          const normalized = t.replace(/\s+/g, ' ').trim();
 
-          const correct=/^\d{1,2}(?::\d{2})?\s+[ap]\.m\.$/i.test(
-            normalized
+          const correct = normalized.replace(
+            /\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
+            (m, x) => {
+              const period = x
+                .toLowerCase()
+                .replace(/\./g, '')
+                .replace(/\s/g, '');
+
+              return ' ' + (
+                period === 'am'
+                  ? 'a.m.'
+                  : 'p.m.'
+              );
+            }
           );
 
-          if(!correct){
+          if (normalized !== correct) {
             errs.push(`Incorrect a.m./p.m. format: ${t}`);
             allErrorsSet.add('Incorrect a.m./p.m. format');
           }
         });
       }
 
-      if(isChecked('gen_percent')&&/%/.test(cleanDialogue)){
-        errs.push('Percent sign: use "percent"');
-        allErrorsSet.add('Percent sign');
+      if (isChecked('gen_percent') && /%/.test(r.dialogue)) {
+        errs.push('Percent sign must be spelled out: %');
+        allErrorsSet.add('Percent sign (%)');
       }
 
-      if(isChecked('gen_numtreat')){
-        const text=stripTags(r.dialogue);
+      if (isChecked('gen_numtreat')) {
+        const text = stripTags(r.dialogue);
 
-        const digitMatches=[
+        const digitMatches = [
           ...text.matchAll(/\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)
         ];
 
-        digitMatches.forEach(m=>{
-          const value=parseInt(
-            m[0].replace(/,/g,'').replace(/[^\d]/g,'')
+        digitMatches.forEach(m => {
+          const value = parseInt(
+            m[0]
+              .replace(/,/g, '')
+              .replace(/[^\d]/g, '')
           );
 
-          const index=m.index;
+          const index = m.index;
 
-          if(isProtectedName(text,m[0]))return;
+          if (isProtectedName(text, m[0])) {
+            return;
+          }
 
-          if(isMetricContext(text,index))return;
+          if (isMetricContext(text, index)) {
+            return;
+          }
 
-          if(isTimeContext(text,index)){
-            if(/o'clock/i.test(text.slice(index))){
+          if (isTimeContext(text, index)) {
+            if (/o'clock/i.test(text.slice(index))) {
               errs.push(`Number should be spelled out: ${m[0]} o'clock`);
               allErrorsSet.add('Number treatment');
             }
@@ -724,337 +857,374 @@ return { rowNum: idx+skip+1, startTs, endTs, dialogue, dialogueHtml, rs, startF,
             return;
           }
 
-          const before=text.slice(0,index).trim();
+          const before = text.slice(0, index).trim();
 
-          if(before===''){
+          if (before === '') {
             errs.push(`First word number must be spelled out: ${m[0]}`);
             allErrorsSet.add('Number treatment');
             return;
           }
 
-          if(value>=1&&value<=10){
+          if (value >= 1 && value <= 10) {
             errs.push(`1-10 must be spelled out: ${m[0]}`);
             allErrorsSet.add('Number treatment');
           }
         });
 
-        const wordMatches=[
+        const wordMatches = [
           ...text.matchAll(numberWordsRegex())
         ];
 
-        wordMatches.forEach(m=>{
-          const value=wordNumberToValue(m[0]);
+        wordMatches.forEach(m => {
+          const value = wordNumberToValue(m[0]);
 
-          if(value===null)return;
+          if (value === null) return;
 
-          const index=m.index;
+          const index = m.index;
 
-          if(/^\s*o'clock/i.test(
-            text.slice(index+m[0].length)
-          ))return;
+          if (/^\s*o'clock/i.test(
+            text.slice(index + m[0].length)
+          )) {
+            return;
+          }
 
-          const before=text.slice(0,index).trim();
+          const before = text.slice(0, index).trim();
 
-          if(before==='')return;
+          if (before === '') {
+            return;
+          }
 
-          if(isMetricContext(
+          if (isMetricContext(
             text,
-            index+m[0].length
-          ))return;
+            index + m[0].length
+          )) {
+            return;
+          }
 
-          if(value>=11){
+          if (value >= 11) {
             errs.push(`11+ must use numerals: ${m[0]}`);
             allErrorsSet.add('Number treatment');
           }
         });
       }
 
-      if(isChecked('gen_maxlines2')&&lines.length>2){
+      if (isChecked('gen_maxlines2') && lines.length > 2) {
         errs.push(`Lines: ${lines.length}`);
         allErrorsSet.add('Too many lines');
       }
 
-      if(isChecked('pccw_maxline1')&&lines.length>1){
+      if (isChecked('pccw_maxline1') && lines.length > 1) {
         errs.push(`PCCW Lines: ${lines.length}`);
         allErrorsSet.add('PCCW Exceeded 1 line');
       }
 
-      if(isChecked('wbd_char37')){
-        const maxFound=Math.max(
-          ...lines.map(l=>stripTags(l).length)
+      if (isChecked('wbd_char37')) {
+        const maxFound = Math.max(
+          ...lines.map(l => stripTags(l).length)
         );
 
-        if(maxFound>37){
+        if (maxFound > 37) {
           errs.push(`WBD Over limit: ${maxFound}ch`);
           allErrorsSet.add('WBD Char limit 37');
         }
       }
 
-      if(isChecked('coup_char42')){
-        const maxFound=Math.max(
-          ...lines.map(l=>stripTags(l).length)
+      if (isChecked('coup_char42')) {
+        const maxFound = Math.max(
+          ...lines.map(l => stripTags(l).length)
         );
 
-        if(maxFound>42){
+        if (maxFound > 42) {
           errs.push(`Coupang Over limit: ${maxFound}ch`);
           allErrorsSet.add('Coupang Char limit 42');
         }
       }
 
-      if(isChecked('net_char42')){
-        const maxFound=Math.max(
-          ...lines.map(l=>stripTags(l).length)
+      if (isChecked('net_char42')) {
+        const maxFound = Math.max(
+          ...lines.map(l => stripTags(l).length)
         );
 
-        if(maxFound>42){
+        if (maxFound > 42) {
           errs.push(`Netflix Over limit: ${maxFound}ch`);
           allErrorsSet.add('Netflix Char limit 42');
         }
       }
 
-      if(isChecked('pccw_char75')){
-        const maxFound=Math.max(
-          ...lines.map(l=>stripTags(l).length)
+      if (isChecked('pccw_char75')) {
+        const maxFound = Math.max(
+          ...lines.map(l => stripTags(l).length)
         );
 
-        if(maxFound>75){
+        if (maxFound > 75) {
           errs.push(`PCCW Over limit: ${maxFound}ch`);
           allErrorsSet.add('PCCW Char limit 75');
         }
       }
 
-      if(isChecked('gen_mergeable')&&lines.length===2){
-        const line1Clean=stripTags(lines[0]).trim();
-        const line2Clean=stripTags(lines[1]).trim();
+      if (isChecked('gen_mergeable') && lines.length === 2) {
+        const line1Clean = stripTags(lines[0]).trim();
+        const line2Clean = stripTags(lines[1]).trim();
 
-        if(!line1Clean.startsWith('-')){
-          const totalMerged=line1Clean.length+line2Clean.length+1;
+        if (!line1Clean.startsWith('-')) {
+          const totalMerged =
+            line1Clean.length +
+            line2Clean.length +
+            1;
 
-          const currentLimit=
-            isChecked('coup_char42')||isChecked('net_char42')
-              ?42
-              :(isChecked('pccw_char75')?75:37);
+          const currentLimit =
+            isChecked('coup_char42') ||
+            isChecked('net_char42')
+              ? 42
+              : isChecked('pccw_char75')
+                ? 75
+                : 37;
 
-          if(totalMerged<=currentLimit){
+          if (totalMerged <= currentLimit) {
             errs.push(`Mergeable (${totalMerged}ch)`);
             allErrorsSet.add('Mergeable to 1 line');
           }
         }
       }
 
-      if(isChecked('gen_hypcon')&&lines.length===2){
-        const l1h=/^-/.test(lines[0].trim());
-        const l2h=/^-/.test(lines[1].trim());
+      if (isChecked('gen_hypcon') && lines.length === 2) {
+        const l1h = /^-/.test(lines[0].trim());
+        const l2h = /^-/.test(lines[1].trim());
 
-        if(l1h!==l2h){
+        if (l1h !== l2h) {
           errs.push('Hyphen inconsistency');
           allErrorsSet.add('Hyphen inconsistency');
         }
       }
 
-      if(isChecked('net_hypcon')&&lines.length===2){
-        const l1h=/^-/.test(lines[0].trim());
-        const l2h=/^-/.test(lines[1].trim());
-
-        if(l1h!==l2h){
-          errs.push('Netflix Hyphen inconsistency');
-          allErrorsSet.add('Netflix Hyphen inconsistency');
-        }
-      }
-
-      if(isChecked('coup_hyp_space')&&lines.some(l=>/^-[^\s]/.test(l.trim()))){
+      if (isChecked('coup_hyp_space') && lines.some(l => /^-[^\s]/.test(l.trim()))) {
         errs.push('Coupang Hyphen missing space');
         allErrorsSet.add('Coupang Hyphen missing space');
       }
 
-      if(isChecked('wbd_hyp_space')&&lines.some(l=>/^-[^\s]/.test(l.trim()))){
+      if (isChecked('wbd_hyp_space') && lines.some(l => /^-[^\s]/.test(l.trim()))) {
         errs.push('WBD Hyphen missing space');
         allErrorsSet.add('WBD Hyphen missing space');
       }
 
-      if(isChecked('net_hyp_nospace')&&lines.some(l=>/^-\s/.test(l.trim()))){
+      if (isChecked('net_hyp_nospace') && lines.some(l => /^-\s/.test(l.trim()))) {
         errs.push('Netflix Space after hyphen');
         allErrorsSet.add('Netflix Space after hyphen');
       }
 
-      if(isChecked('wbd_comma_det')){
-        const lastLine=lines[lines.length-1]?.trimEnd()||'';
+      if (isChecked('wbd_comma_det')) {
+        const lastLine = lines[lines.length - 1]?.trimEnd() || '';
 
-        if(lastLine.endsWith(',')){
+        if (lastLine.endsWith(',')) {
           errs.push('WBD Ends with comma');
           allErrorsSet.add('WBD Trailing comma');
         }
       }
 
-      if(isChecked('pccw_end_punct')){
-        const validPunctRegex=/[.,?!\)]\s*$/;
+      if (isChecked('pccw_end_punct')) {
+        const validPunctRegex = /[.,?!\)]\s*$/;
 
-        if(!validPunctRegex.test(cleanDialogue)){
+        if (!validPunctRegex.test(cleanDialogue)) {
           errs.push('PCCW No ending punctuation');
           allErrorsSet.add('PCCW Missing punctuation');
         }
       }
 
-      if(isChecked('pccw_noitalics')&&r.hasItalic){
+      if (isChecked('pccw_noitalics') && r.hasItalics) {
         errs.push('PCCW Italics detected');
-        allErrorsSet.add('PCCW Italics forbidden');
+        allErrorsSet.add('PCCW Italics detected');
       }
 
-      if(isChecked('coup_ital_punct')&&r.italicPunct){
-        errs.push('Partial italics punctuation');
+      if (isChecked('coup_partial_italics') && r.italicPunctuation.length > 0) {
+        errs.push(
+          `Partial italics punctuation: ${r.italicPunctuation.join(', ')}`
+        );
         allErrorsSet.add('Partial italics punctuation');
       }
 
-      if(isChecked('pccw_uppercase')&&isAllUppercase(cleanDialogue)){
-        errs.push('PCCW All uppercase');
-        allErrorsSet.add('PCCW All uppercase');
-      }
+      if (isChecked('pccw_ampm')) {
+        const text = stripTags(r.dialogue);
 
-      if(isChecked('pccw_ampm')){
-        const text=stripTags(r.dialogue);
+        const matches = text.match(
+          /\b\d{1,2}(?::\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/gi
+        ) || [];
 
-        const matches=text.match(
-          /\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b/gi
-        )||[];
-
-        matches.forEach(t=>{
-          if(!/^\d{1,2}(?::\d{2})?(?:am|pm)$/i.test(t)){
+        matches.forEach(t => {
+          if (!/^\d{1,2}(?::\d{2})?(am|pm)$/i.test(t)) {
             errs.push(`PCCW time format error: ${t}`);
             allErrorsSet.add('PCCW am/pm format');
           }
         });
       }
+
+      if (isChecked('pccw_hyphen_middle')) {
+        lines.forEach(line => {
+          const trimmed = line.trim();
+
+          if (/^-/.test(trimmed) && !trimmed.includes(' - ')) {
+            errs.push('PCCW Dialogue exchange requires " - "');
+            allErrorsSet.add('PCCW Hyphen exchange format');
+          }
+        });
+      }
+
+      if (isChecked('pccw_uppercase')) {
+        const letters = cleanDialogue.match(/[A-Za-z]/g);
+
+        if (
+          letters &&
+          letters.length > 0 &&
+          letters.every(ch => ch === ch.toUpperCase())
+        ) {
+          errs.push('PCCW All uppercase');
+          allErrorsSet.add('PCCW All uppercase');
+        }
+      }
+    }
+  });
+
+  if (isChecked('gen_credit') && processed.length > 0) {
+    const last = processed[processed.length - 1];
+    const lastText = stripTags(last.dialogue);
+
+    if (!/Subtitle translation by/i.test(lastText)) {
+      last.errors.push("Missing translator's credit");
+      allErrorsSet.add("Missing translator's credit");
     }
 
-    const rsv=parseFloat(r.rs);
+    if (last.startF != null && last.endF != null) {
+      const lastDuration = framesToSec(
+        last.endF - last.startF,
+        fps
+      );
 
-    if(!isNaN(rsv)){
-      if(isChecked('coup_rs20')&&rsv>20){
-        errs.push('Coupang CPS > 20');
+      if (Math.abs(lastDuration - 2.0) > 0.0001) {
+        last.errors.push(
+          `Translator's credit duration must be exactly 2 seconds (${lastDuration.toFixed(2)}s)`
+        );
+        allErrorsSet.add("Translator's credit duration");
+      }
+    } else {
+      last.errors.push(
+        "Translator's credit duration cannot be determined"
+      );
+      allErrorsSet.add("Translator's credit duration");
+    }
+  }
+
+  processed.forEach(r => {
+    const rsv = parseFloat(r.rs);
+
+    if (!isNaN(rsv)) {
+      if (isChecked('coup_rs20') && rsv > 20) {
+        r.errors.push('Coupang CPS > 20');
         allErrorsSet.add('Coupang CPS > 20');
       }
 
-      if(isChecked('coup_rs30')&&rsv>30){
-        errs.push('Coupang CPS > 30');
+      if (isChecked('coup_rs30') && rsv > 30) {
+        r.errors.push('Coupang CPS > 30');
         allErrorsSet.add('Coupang CPS > 30');
       }
 
-      if(isChecked('wbd_rs30')&&rsv>30){
-        errs.push('WBD CPS > 30');
+      if (isChecked('wbd_rs30') && rsv > 30) {
+        r.errors.push('WBD CPS > 30');
         allErrorsSet.add('WBD CPS > 30');
       }
 
-      if(isChecked('net_rs30')&&rsv>30){
-        errs.push('Netflix CPS > 30');
+      if (isChecked('net_rs30') && rsv > 30) {
+        r.errors.push('Netflix CPS > 30');
         allErrorsSet.add('Netflix CPS > 30');
       }
     }
   });
 
-  if(isChecked('gen_credit')&&processed.length>0){
-    const last=processed[processed.length-1];
-    const lastText=stripTags(last.dialogue);
-
-    if(!/Subtitle translation by/i.test(lastText)){
-      last.errors.push("Missing translator's credit");
-      allErrorsSet.add("Missing translator's credit");
-    }
-
-    const lastDurF=
-      last.startF!=null&&last.endF!=null
-        ?last.endF-last.startF
-        :null;
-
-    const lastDurS=
-      lastDurF!=null
-        ?framesToSec(lastDurF,fps)
-        :null;
-
-    if(lastDurS===null||Math.abs(lastDurS-2)>0.000001){
-      last.errors.push(
-        `Translator's credit duration must be exactly 2 seconds`
-      );
-      allErrorsSet.add(
-        "Translator's credit duration must be exactly 2 seconds"
-      );
-    }
-  }
-
-  renderResults(processed,allErrorsSet);
+  renderResults(processed, allErrorsSet);
 }
 
-function renderResults(data,allErrorsSet){
-  const area=document.getElementById('results-area');
+function renderResults(data, allErrorsSet) {
+  const area = document.getElementById('results-area');
 
-  area.style.display='block';
+  area.style.display = 'block';
   area.scrollIntoView({
-    behavior:'smooth',
-    block:'start'
+    behavior: 'smooth',
+    block: 'start'
   });
 
-  const errorCount=data.filter(
-    r=>r.errors.length>0
+  const errorCount = data.filter(
+    r => r.errors.length > 0
   ).length;
 
-  const totalIssues=data.reduce(
-    (s,r)=>s+r.errors.length,
+  const totalIssues = data.reduce(
+    (s, r) => s + r.errors.length,
     0
   );
 
-  document.getElementById('stats-row').innerHTML=`
+  document.getElementById('stats-row').innerHTML = `
     <div class="stat-box">
       <div class="val">${data.length}</div>
       <div class="lbl">Total Subs</div>
     </div>
-    <div class="stat-box ${errorCount>0?'err':'ok'}">
+    <div class="stat-box ${errorCount > 0 ? 'err' : 'ok'}">
       <div class="val">${errorCount}</div>
       <div class="lbl">Rows w/ Errors</div>
     </div>
-    <div class="stat-box ${totalIssues>0?'warn':'ok'}">
+    <div class="stat-box ${totalIssues > 0 ? 'warn' : 'ok'}">
       <div class="val">${totalIssues}</div>
       <div class="lbl">Total Issues</div>
     </div>
   `;
 
-  const etf=document.getElementById('error-type-filter');
+  const etf = document.getElementById('error-type-filter');
 
-  etf.innerHTML='<option value="all">All error types</option>';
+  etf.innerHTML =
+    '<option value="all">All error types</option>';
 
-  [...allErrorsSet].sort().forEach(e=>{
-    const opt=document.createElement('option');
-    opt.value=e;
-    opt.textContent=e;
-    etf.appendChild(opt);
-  });
+  [...allErrorsSet]
+    .sort()
+    .forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e;
+      opt.textContent = e;
+      etf.appendChild(opt);
+    });
 
-  window._tableData=data;
+  window._tableData = data;
   applyFilter();
 }
 
-function applyFilter(){
-  const filter=document.getElementById('filter-select').value;
-  const etFilter=document.getElementById('error-type-filter').value;
-  const tbody=document.getElementById('results-body');
+function applyFilter() {
+  const filter =
+    document.getElementById('filter-select').value;
 
-  tbody.innerHTML='';
+  const etFilter =
+    document.getElementById('error-type-filter').value;
 
-  let visible=window._tableData||[];
+  const tbody =
+    document.getElementById('results-body');
 
-  if(filter==='errors'){
-    visible=visible.filter(r=>r.errors.length>0);
+  tbody.innerHTML = '';
+
+  let visible = window._tableData || [];
+
+  if (filter === 'errors') {
+    visible = visible.filter(
+      r => r.errors.length > 0
+    );
   }
 
-  if(etFilter!=='all'){
-    visible=visible.filter(r=>
-      r.errors.some(e=>
-        e.includes(etFilter)||
-        e.toLowerCase().includes(etFilter.toLowerCase())
+  if (etFilter !== 'all') {
+    visible = visible.filter(r =>
+      r.errors.some(e =>
+        e.includes(etFilter) ||
+        e.toLowerCase().includes(
+          etFilter.toLowerCase()
+        )
       )
     );
   }
 
-  if(visible.length===0){
-    tbody.innerHTML=`
+  if (visible.length === 0) {
+    tbody.innerHTML = `
       <tr>
         <td colspan="7">
           <div class="no-errors">
@@ -1067,27 +1237,32 @@ function applyFilter(){
     return;
   }
 
-  visible.forEach((r,idx)=>{
-    const tr=document.createElement('tr');
+  visible.forEach((r, idx) => {
+    const tr = document.createElement('tr');
 
-    if(r.errors.length>0){
+    if (r.errors.length > 0) {
       tr.classList.add('has-error');
     }
 
-    const tags=r.errors.map(e=>
-      `<span class="etag">${escHtml(e)}</span>`
-    ).join('');
+    const tags = r.errors
+      .map(e => `<span class="etag">${escHtml(e)}</span>`)
+      .join('');
 
-    tr.innerHTML=`
-      <td class="row-num">${idx+1}</td>
+    const dialogueHtml =
+      r.dialogueHtml ||
+      escHtml(r.dialogue).replace(/\r?\n/g, '<br>');
+
+    tr.innerHTML = `
+      <td class="row-num">${idx + 1}</td>
       <td class="row-num">${r.rowNum}</td>
       <td class="ts">${escHtml(r.startTs)}</td>
       <td class="ts">${escHtml(r.endTs)}</td>
-<td class="dialogue-cell">${sanitizeRichText(r.dialogueHtml, r.dialogue)}</td>
-      </td>
+      <td class="dialogue-cell">${dialogueHtml}</td>
       <td class="rs">${escHtml(r.rs)}</td>
       <td>
-        <div class="error-tags">${tags||'—'}</div>
+        <div class="error-tags">
+          ${tags || '—'}
+        </div>
       </td>
     `;
 
@@ -1095,15 +1270,7 @@ function applyFilter(){
   });
 }
 
-function escHtml(str){
-  return String(str||'')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-function resetAll(){
+function resetAll() {
   location.reload();
 }
 
