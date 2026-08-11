@@ -314,6 +314,13 @@ function framesToSec(frames,fps){
 function getLines(text){
   return text?String(text).split(/\r?\n/):[];
 }
+  function sanitizeRichText(html, fallback) {
+  if (!html) return escHtml(fallback || '').replace(/\r?\n/g, '<br>');
+  return html
+    .replace(/<(?!\/?(?:i|em|b|strong|u|br)\b)[^>]*>/gi, '')
+    .replace(/<\s*(i|em|b|strong|u|br)(?:\s[^>]*)?>/gi, '<$1>')
+    .replace(/<\/\s*(i|em|b|strong|u)\s*>/gi, '</$1>');
+}
 
 function cellHasItalic(cell){
   if(!cell)return false;
@@ -492,12 +499,7 @@ function loadFile(file){
 
   reader.onload=e=>{
     try{
-      workbook=XLSX.read(e.target.result,{
-        type:'array',
-        raw:false,
-        cellStyles:true,
-        cellHTML:true
-      });
+      workbook = XLSX.read(e.target.result, { type:'array', raw:false, cellHTML:true });
 
       document.getElementById('run-btn').disabled=false;
     }catch(err){
@@ -537,14 +539,10 @@ function runChecks(){
   const processed=rows.map((row,idx)=>{
     const startTs=row[1]!=null?String(row[1]).trim():'';
     const endTs=row[2]!=null?String(row[2]).trim():'';
-    const dialogue=row[4]!=null?String(row[4]):'';
-
-    const cellAddress=XLSX.utils.encode_cell({
-      r:idx+skip,
-      c:4
-    });
-
-    const dialogueCell=sheet[cellAddress];
+const dialogue = row[4] != null ? String(row[4]) : '';
+const cellAddress = XLSX.utils.encode_cell({ r: idx + skip, c: 4 });
+const dialogueCell = sheet[cellAddress];
+const dialogueHtml = dialogueCell?.h || '';
     const hasItalic=cellHasItalic(dialogueCell);
     const italicPunct=hasItalicPunctuation(dialogueCell);
 
@@ -561,18 +559,7 @@ function runChecks(){
       rs=(cleanText.length/framesToSec(durF,fps)).toFixed(1);
     }
 
-    return {
-      rowNum:idx+skip+1,
-      startTs,
-      endTs,
-      dialogue,
-      rs,
-      startF,
-      endF,
-      hasItalic,
-      italicPunct,
-      errors:[]
-    };
+return { rowNum: idx+skip+1, startTs, endTs, dialogue, dialogueHtml, rs, startF, endF, errors:[] };
   }).filter(r=>r.startTs||r.endTs||r.dialogue);
 
   processed.forEach((r,i)=>{
@@ -1096,8 +1083,7 @@ function applyFilter(){
       <td class="row-num">${r.rowNum}</td>
       <td class="ts">${escHtml(r.startTs)}</td>
       <td class="ts">${escHtml(r.endTs)}</td>
-      <td class="dialogue-cell">
-        ${getLines(r.dialogue).map(l=>escHtml(l)).join('<br>')}
+<td class="dialogue-cell">${sanitizeRichText(r.dialogueHtml, r.dialogue)}</td>
       </td>
       <td class="rs">${escHtml(r.rs)}</td>
       <td>
