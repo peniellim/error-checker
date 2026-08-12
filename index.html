@@ -196,12 +196,12 @@ const CHECKS = [
 { id:'gen_numtreat', group:'General', label:'Number treatment', defaultOn:true },
 { id:'gen_ampm', group:'General', label:'Time: a.m./p.m. with space', defaultOn:true },
 { id:'gen_percent', group:'General', label:'Percent: spell out %', defaultOn:true },
-{ id:'gen_credit', group:'General', label:"Translator's credit", defaultOn:true },
 { id:'coup_mindur20', group:'Coupang', label:'Min duration 20 frames', defaultOn:true },
 { id:'coup_mindur25', group:'Coupang', label:'Min duration 25 frames', defaultOn:true },
 { id:'coup_maxdur6s', group:'Coupang', label:'Max duration 6 seconds', defaultOn:true },
 { id:'coup_hyp_space', group:'Coupang', label:'Spacing after hyphen', defaultOn:true },
 { id:'coup_char42', group:'Coupang', label:'Character limit: 42', defaultOn:true },
+{ id:'coup_credit', group:'Coupang', label:"Translator's credit", defaultOn:true },
 { id:'coup_rs20', group:'Coupang', label:'Over 20 CPS', defaultOn:true },
 { id:'coup_rs30', group:'Coupang', label:'Over 30 CPS', defaultOn:true },
 { id:'coup_partial_italics', group:'Coupang', label:'Partial italics punctuation', defaultOn:true },
@@ -211,6 +211,7 @@ const CHECKS = [
 { id:'wbd_comma_det', group:'WBD', label:'Last line ends with comma', defaultOn:true },
 { id:'wbd_doublehyp', group:'WBD', label:'Double hyphens', defaultOn:true },
 { id:'wbd_char37', group:'WBD', label:'Character limit: 37', defaultOn:true },
+{ id:'wbd_credit', group:'WBD', label:"Translator's credit", defaultOn:true },
 { id:'wbd_rs30', group:'WBD', label:'Over 30 CPS', defaultOn:true },
 { id:'pccw_mindur1s', group:'PCCW', label:'Min duration 1 second', defaultOn:true },
 { id:'pccw_maxdur6s', group:'PCCW', label:'Max duration 6 seconds', defaultOn:true },
@@ -1162,13 +1163,13 @@ allErrorsSet.add('PCCW All uppercase');
 }
 });
 
-if (isChecked('gen_credit') && processed.length > 0) {
+if (isChecked('coup_credit') && processed.length > 0) {
 const last = processed[processed.length - 1];
 const lastText = stripTags(last.dialogue);
 
 if (!/Subtitle translation by/i.test(lastText)) {
-last.errors.push("Missing translator's credit");
-allErrorsSet.add("Missing translator's credit");
+last.errors.push("Missing translator's credit: Subtitle translation by");
+allErrorsSet.add("Missing translator's credit: Subtitle translation by");
 }
 
 if (last.startF != null && last.endF != null) {
@@ -1176,7 +1177,31 @@ const lastDuration = framesToSec(last.endF - last.startF,fps);
 
 if (Math.abs(lastDuration - 2.0) > 0.0001) {
 last.errors.push(
-`Translator's credit duration must be exactly 2 seconds (${lastDuration.toFixed(2)}s)`
+`Translator's credit must be 2 seconds (${lastDuration.toFixed(2)}s)`
+);
+allErrorsSet.add("Translator's credit duration");
+}
+} else {
+last.errors.push("Translator's credit duration cannot be determined");
+allErrorsSet.add("Translator's credit duration");
+}
+}
+
+if (isChecked('wbd_credit') && processed.length > 0) {
+const last = processed[processed.length - 1];
+const lastText = stripTags(last.dialogue);
+
+if (!/Subtitles by/i.test(lastText)) {
+last.errors.push("Missing translator's credit: Subtitles by");
+allErrorsSet.add("Missing translator's credit: Subtitles by");
+}
+
+if (last.startF != null && last.endF != null) {
+const lastDuration = framesToSec(last.endF - last.startF,fps);
+
+if (Math.abs(lastDuration - 2.0) > 0.0001) {
+last.errors.push(
+`Translator's credit must be 2 seconds (${lastDuration.toFixed(2)}s)`
 );
 allErrorsSet.add("Translator's credit duration");
 }
