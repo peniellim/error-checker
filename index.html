@@ -232,6 +232,7 @@ const CHECKS = [
 let workbook = null;
 let workbookBuffer = null;
 let xmlItalicData = {};
+let cellXfsGlobal = [];
 window._tableData = [];
 
 function buildCheckboxes() {
@@ -369,12 +370,6 @@ const protectedPatterns = [/apollo\s+\d+/i,/catch-\d+/i,/room\s+\d+/i,/formula\s
 return protectedPatterns.some(r => r.test(match));
 }
 
-function parseHtml(html) {
-const parser = new DOMParser();
-const doc = parser.parseFromString(`<div id="root">${html || ''}</div>`,'text/html');
-return doc.getElementById('root');
-}
-
 function isItalicElement(el) {
 if (!el || el.nodeType !== 1) return false;
 const tag = el.tagName.toLowerCase();
@@ -385,35 +380,18 @@ return /font-style\s*:\s*italic/i.test(style);
 
 function hasItalicFormatting(html) {
 if (!html) return false;
-const root = parseHtml(html);
+const parser = new DOMParser();
+const doc = parser.parseFromString(`<div id="root">${html || ''}</div>`,'text/html');
+const root = doc.getElementById('root');
 if (isItalicElement(root)) return true;
 return [...root.querySelectorAll('*')].some(isItalicElement);
 }
 
-function findItalicPunctuation(html) {
-if (!html) return [];
-const root = parseHtml(html);
-const punctuation = /[.,!?;:"'()\[\]{}\-…]/g;
-const found = [];
-function walk(node,italicActive) {
-if (node.nodeType === Node.TEXT_NODE) {
-if (italicActive) {
-const matches = node.nodeValue.match(punctuation);
-if (matches) found.push(...matches);
-}
-return;
-}
-if (node.nodeType !== Node.ELEMENT_NODE) return;
-const italicHere = italicActive || isItalicElement(node);
-[...node.childNodes].forEach(child => walk(child,italicHere));
-}
-[...root.childNodes].forEach(node => walk(node,false));
-return [...new Set(found)];
-}
-
 function sanitizeRichHtml(html,fallbackText) {
 if (!html) return escHtml(fallbackText || '').replace(/\r?\n/g,'<br>');
-const root = parseHtml(html);
+const parser = new DOMParser();
+const doc = parser.parseFromString(`<div id="root">${html || ''}</div>`,'text/html');
+const root = doc.getElementById('root');
 function serialize(node) {
 if (node.nodeType === Node.TEXT_NODE) return escHtml(node.nodeValue);
 if (node.nodeType !== Node.ELEMENT_NODE) return '';
@@ -494,9 +472,17 @@ const stylesDoc = parser.parseFromString(stylesXml,'application/xml');
 
 const fonts = [...stylesDoc.getElementsByTagName('*')].filter(el => el.localName === 'font');
 
-italicFonts = fonts.map(font => {
-return [...font.children].some(child => child.localName === 'i');
+italicFonts = fonts.map((font, idx) => {
+const hasItalic = [...font.children].some(child => child.localName === 'i');
+return hasItalic;
 });
+
+// PRE-LOAD cellXfs from styles.xml (not from sheet XML)
+// Find the cellXfs element specifically, not cellStyleXfs
+const cellXfsElement = [...stylesDoc.getElementsByTagName('*')].find(el => el.localName === 'cellXfs');
+if (cellXfsElement) {
+  cellXfsGlobal = [...cellXfsElement.children].filter(el => el.localName === 'xf');
+}
 }
 
 const sharedStrings = [];
@@ -558,12 +544,10 @@ const styleIndex = parseInt(cell.getAttribute('s') || '0',10);
 
 let cellLevelItalic = false;
 
-if (!isNaN(styleIndex)) {
-const cellXfs = [...doc.getElementsByTagName('*')].filter(el => el.localName === 'xf');
-if (cellXfs[styleIndex]) {
-const fontId = parseInt(cellXfs[styleIndex].getAttribute('fontId') || '0',10);
+// Use pre-loaded cellXfsGlobal from styles.xml
+if (!isNaN(styleIndex) && cellXfsGlobal && cellXfsGlobal[styleIndex]) {
+const fontId = parseInt(cellXfsGlobal[styleIndex].getAttribute('fontId') || '0',10);
 cellLevelItalic = !!italicFonts[fontId];
-}
 }
 
 const type = cell.getAttribute('t');
@@ -635,9 +619,9 @@ sheetData[ref] = {
 text,
 cellLevelItalic,
 allTextItalic,
-hasItalics:cellLevelItalic || runs.some(r => r.italic),
+hasItalics: cellLevelItalic || runs.some(r => r.italic),
 partialItalic,
-italicPunctuation:[...new Set(italicPunctuation)]
+italicPunctuation: [...new Set(italicPunctuation)]
 };
 });
 
@@ -649,10 +633,10 @@ function getXmlItalicInfo(sheetName,cellRef) {
 const sheetData = xmlItalicData[sheetName];
 if (!sheetData || !sheetData[cellRef]) {
 return {
-hasItalics:false,
-allTextItalic:false,
-partialItalic:false,
-italicPunctuation:[]
+hasItalics: false,
+allTextItalic: false,
+partialItalic: false,
+italicPunctuation: []
 };
 }
 return sheetData[cellRef];
@@ -665,13 +649,11 @@ const xmlInfo = getXmlItalicInfo(sheetName,cellRef);
 const htmlItalic = hasItalicFormatting(html);
 
 return {
-html:sanitizeRichHtml(html,fallbackText),
-hasItalics:xmlInfo.hasItalics || htmlItalic,
-allTextItalic:xmlInfo.allTextItalic,
-partialItalic:xmlInfo.partialItalic,
-italicPunctuation:xmlInfo.partialItalic
-? xmlInfo.italicPunctuation
-: []
+html: sanitizeRichHtml(html,fallbackText),
+hasItalics: xmlInfo.hasItalics || htmlItalic,
+allTextItalic: xmlInfo.allTextItalic,
+partialItalic: xmlInfo.partialItalic,
+italicPunctuation: xmlInfo.partialItalic ? xmlInfo.italicPunctuation : []
 };
 }
 
@@ -791,19 +773,19 @@ framesToSec(durF,fps)
 }
 
 return {
-rowNum:excelRow,
+rowNum: excelRow,
 startTs,
 endTs,
 dialogue,
-dialogueHtml:rich.html,
-hasItalics:rich.hasItalics,
-allTextItalic:rich.allTextItalic,
-partialItalic:rich.partialItalic,
-italicPunctuation:rich.italicPunctuation,
+dialogueHtml: rich.html,
+hasItalics: rich.hasItalics,
+allTextItalic: rich.allTextItalic,
+partialItalic: rich.partialItalic,
+italicPunctuation: rich.italicPunctuation,
 rs,
 startF,
 endF,
-errors:[]
+errors: []
 };
 }).filter(r => r.startTs || r.endTs || r.dialogue);
 
@@ -1124,18 +1106,19 @@ allErrorsSet.add('PCCW Missing punctuation');
 }
 }
 
-/* GROUP 4 - NO ITALICS
-   Detects both entire-cell italics and partial italics. */
-if (isChecked('pccw_noitalics') && r.hasItalics) {
-errs.push('PCCW Italics detected');
-allErrorsSet.add('PCCW Italics detected');
-}
-
-/* GROUP 2 - PARTIAL ITALICS PUNCTUATION
-   Entirely italicized cells are deliberately excluded. */
+// GROUP 2 - PARTIAL ITALICS PUNCTUATION
+// Only flag if partialItalic AND has italicized punctuation
+// Do NOT flag if entire cell is italicized
 if (isChecked('coup_partial_italics') && r.partialItalic && r.italicPunctuation.length > 0) {
 errs.push(`Partial italics punctuation: ${r.italicPunctuation.join(', ')}`);
 allErrorsSet.add('Partial italics punctuation');
+}
+
+// GROUP 4 - NO ITALICS
+// Flag ALL italicized text, whether partial or entire cell
+if (isChecked('pccw_noitalics') && r.hasItalics) {
+errs.push('PCCW Italics detected');
+allErrorsSet.add('PCCW Italics detected');
 }
 
 if (isChecked('pccw_ampm')) {
