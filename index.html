@@ -84,7 +84,6 @@ tbody tr:not(.has-error):hover { background: #fafafa; }
 <div class="page">
 <h1>Subtitle Error Checker</h1>
 <p class="subtitle-text">Upload an Excel subtitle file and select which checks to run.</p>
-
 <div class="card">
 <div class="card-title">File &amp; Settings</div>
 <div class="row">
@@ -122,7 +121,6 @@ tbody tr:not(.has-error):hover { background: #fafafa; }
 </div>
 </div>
 </div>
-
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
 <div class="card-title" style="margin:0;">Checks to run</div>
@@ -137,7 +135,6 @@ tbody tr:not(.has-error):hover { background: #fafafa; }
 <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
 </div>
 </div>
-
 <div id="results-area">
 <div class="card" style="padding:1rem 1.5rem;">
 <div class="stats-row" id="stats-row"></div>
@@ -171,7 +168,6 @@ tbody tr:not(.has-error):hover { background: #fafafa; }
 </div>
 </div>
 </div>
-
 <script>
 const GROUPS = [
 { key:'General', label:'General' },
@@ -181,7 +177,6 @@ const GROUPS = [
 { key:'CJENM', label:'CJENM' },
 { key:'Netflix', label:'Netflix' }
 ];
-
 const CHECKS = [
 { id:'gen_gap2', group:'General', label:'Min 2-frame gap', defaultOn:true },
 { id:'gen_overlap', group:'General', label:'Subtitle Overlaps', defaultOn:true },
@@ -229,13 +224,11 @@ const CHECKS = [
 { id:'net_char42', group:'Netflix', label:'Character limit: 42', defaultOn:true },
 { id:'net_rs30', group:'Netflix', label:'Over 30 CPS', defaultOn:true }
 ];
-
 let workbook = null;
 let workbookBuffer = null;
 let xmlItalicData = {};
 let cellXfsGlobal = [];
 window._tableData = [];
-
 function buildCheckboxes() {
 const container = document.getElementById('groups-container');
 if (!container) return;
@@ -267,22 +260,18 @@ groupSection.appendChild(grid);
 container.appendChild(groupSection);
 });
 }
-
 function toggleAll(on) {
 CHECKS.forEach(c => {
 const el = document.getElementById('chk_' + c.id);
 if (el) el.checked = on;
 });
 }
-
 function isChecked(id) {
 return document.getElementById('chk_' + id)?.checked;
 }
-
 function stripTags(text) {
 return text ? String(text).replace(/<\/?[^>]+(>|$)/g,'') : '';
 }
-
 function escHtml(str) {
 return String(str || '')
 .replace(/&/g,'&amp;')
@@ -291,7 +280,6 @@ return String(str || '')
 .replace(/"/g,'&quot;')
 .replace(/'/g,'&#039;');
 }
-
 function tsToFrames(val,fps) {
 if (val == null || val === '') return null;
 const str = String(val).trim();
@@ -303,28 +291,22 @@ const s = parseInt(parts[2]) || 0;
 const f = parseInt(parts[3]) || 0;
 return Math.round((h * 3600 + m * 60 + s) * fps + f);
 }
-
 function framesToSec(frames,fps) {
 return frames / fps;
 }
-
 function getLines(text) {
 return text ? String(text).split(/\r?\n/) : [];
 }
-
 const SMALL_NUMBERS = {
 zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,
 eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19
 };
-
 const TENS = {
 twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90
 };
-
 const SCALES = {
 hundred:100,thousand:1000,million:1000000,billion:1000000000
 };
-
 function wordNumberToValue(words) {
 words = words.toLowerCase().replace(/-/g,' ').replace(/\band\b/g,' ').trim().split(/\s+/);
 let total = 0;
@@ -350,27 +332,22 @@ return null;
 }
 return found ? total + current : null;
 }
-
 function numberWordsRegex() {
 const nums = [...Object.keys(SMALL_NUMBERS),...Object.keys(TENS),...Object.keys(SCALES),'and'];
 return new RegExp('\\b(' + nums.join('|') + ')(?:[- ](?:' + nums.join('|') + '))*\\b','gi');
 }
-
 function isMetricContext(text,index) {
 const after = text.slice(index).match(/^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i);
 return !!after;
 }
-
 function isTimeContext(text,index) {
 const after = text.slice(index);
 return /^\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\b/i.test(after) || /^\s*o'clock\b/i.test(after);
 }
-
 function isProtectedName(text,match) {
 const protectedPatterns = [/apollo\s+\d+/i,/catch-\d+/i,/room\s+\d+/i,/formula\s+\d+/i];
 return protectedPatterns.some(r => r.test(match));
 }
-
 function isItalicElement(el) {
 if (!el || el.nodeType !== 1) return false;
 const tag = el.tagName.toLowerCase();
@@ -378,7 +355,6 @@ if (tag === 'i' || tag === 'em') return true;
 const style = el.getAttribute('style') || '';
 return /font-style\s*:\s*italic/i.test(style);
 }
-
 function hasItalicFormatting(html) {
 if (!html) return false;
 const parser = new DOMParser();
@@ -387,7 +363,6 @@ const root = doc.getElementById('root');
 if (isItalicElement(root)) return true;
 return [...root.querySelectorAll('*')].some(isItalicElement);
 }
-
 function sanitizeRichHtml(html,fallbackText) {
 if (!html) return escHtml(fallbackText || '').replace(/\r?\n/g,'<br>');
 const parser = new DOMParser();
@@ -410,13 +385,11 @@ let result = [...root.childNodes].map(serialize).join('');
 result = result.replace(/(<br>)+$/i,'');
 return result || escHtml(fallbackText || '').replace(/\r?\n/g,'<br>');
 }
-
 function xmlDecode(text) {
 const parser = new DOMParser();
 const doc = parser.parseFromString(`<root>${text}</root>`,'application/xml');
 return doc.documentElement.textContent || '';
 }
-
 function normalizeXmlPath(path) {
 const parts = path.split('/');
 const result = [];
@@ -427,36 +400,29 @@ else result.push(p);
 });
 return result.join('/');
 }
-
 function resolveTarget(basePath,target) {
 if (target.startsWith('/')) return target.slice(1);
 const baseParts = basePath.split('/');
 baseParts.pop();
 return normalizeXmlPath(baseParts.concat(target.split('/')).join('/'));
 }
-
 async function loadItalicXmlData(buffer) {
 xmlItalicData = {};
 const zip = await JSZip.loadAsync(buffer);
 const workbookXml = await zip.file('xl/workbook.xml').async('text');
 const relsXml = await zip.file('xl/_rels/workbook.xml.rels').async('text');
 const stylesFile = zip.file('xl/styles.xml');
-
 const parser = new DOMParser();
 const workbookDoc = parser.parseFromString(workbookXml,'application/xml');
 const relsDoc = parser.parseFromString(relsXml,'application/xml');
-
 const relMap = {};
 [...relsDoc.getElementsByTagName('*')].forEach(el => {
 if (el.localName === 'Relationship') {
 relMap[el.getAttribute('Id')] = el.getAttribute('Target');
 }
 });
-
 const sheets = [...workbookDoc.getElementsByTagName('*')].filter(el => el.localName === 'sheet');
-
 const sheetTargets = {};
-
 sheets.forEach(sheet => {
 const name = sheet.getAttribute('name');
 const rid = sheet.getAttribute('r:id') || sheet.getAttribute('id');
@@ -464,20 +430,15 @@ if (name && rid && relMap[rid]) {
 sheetTargets[name] = resolveTarget('xl/workbook.xml',relMap[rid]);
 }
 });
-
 let italicFonts = [];
-
 if (stylesFile) {
 const stylesXml = await stylesFile.async('text');
 const stylesDoc = parser.parseFromString(stylesXml,'application/xml');
-
 const fonts = [...stylesDoc.getElementsByTagName('*')].filter(el => el.localName === 'font');
-
 italicFonts = fonts.map((font, idx) => {
 const hasItalic = [...font.children].some(child => child.localName === 'i');
 return hasItalic;
 });
-
 // PRE-LOAD cellXfs from styles.xml (not from sheet XML)
 // Find the cellXfs element specifically, not cellStyleXfs
 const cellXfsElement = [...stylesDoc.getElementsByTagName('*')].find(el => el.localName === 'cellXfs');
@@ -485,19 +446,14 @@ if (cellXfsElement) {
   cellXfsGlobal = [...cellXfsElement.children].filter(el => el.localName === 'xf');
 }
 }
-
 const sharedStrings = [];
 const sharedFile = zip.file('xl/sharedStrings.xml');
-
 if (sharedFile) {
 const sharedXml = await sharedFile.async('text');
 const sharedDoc = parser.parseFromString(sharedXml,'application/xml');
-
 const siNodes = [...sharedDoc.getElementsByTagName('*')].filter(el => el.localName === 'si');
-
 siNodes.forEach(si => {
 const runs = [...si.getElementsByTagName('*')].filter(el => el.localName === 'r');
-
 if (runs.length === 0) {
 sharedStrings.push({
 text: si.textContent || '',
@@ -505,7 +461,6 @@ runs: []
 });
 return;
 }
-
 const runData = runs.map(run => {
 const textNode = [...run.getElementsByTagName('*')].find(el => el.localName === 't');
 const text = textNode ? textNode.textContent : '';
@@ -513,67 +468,49 @@ const italic = [...run.children].some(child => {
 if (child.localName !== 'rPr') return false;
 return [...child.children].some(x => x.localName === 'i');
 });
-
 return { text, italic };
 });
-
 sharedStrings.push({
 text: runData.map(r => r.text).join(''),
 runs: runData
 });
 });
 }
-
 for (const sheetName of Object.keys(sheetTargets)) {
 const path = sheetTargets[sheetName];
 const file = zip.file(path);
-
 if (!file) continue;
-
 const xml = await file.async('text');
 const doc = parser.parseFromString(xml,'application/xml');
-
 const cellNodes = [...doc.getElementsByTagName('*')].filter(el => el.localName === 'c');
-
 const sheetData = {};
-
 cellNodes.forEach(cell => {
 const ref = cell.getAttribute('r');
 if (!ref) return;
-
 const styleIndex = parseInt(cell.getAttribute('s') || '0',10);
-
 let cellLevelItalic = false;
-
 // Use pre-loaded cellXfsGlobal from styles.xml
 if (!isNaN(styleIndex) && cellXfsGlobal && cellXfsGlobal[styleIndex]) {
 const fontId = parseInt(cellXfsGlobal[styleIndex].getAttribute('fontId') || '0',10);
 cellLevelItalic = !!italicFonts[fontId];
 }
-
 const type = cell.getAttribute('t');
 const isShared = type === 's';
-
 const valueNode = [...cell.children].find(x => x.localName === 'v');
 const value = valueNode ? valueNode.textContent : '';
-
 let runs = [];
 let text = '';
-
 if (isShared && value !== '') {
 const sharedIndex = parseInt(value,10);
 const shared = sharedStrings[sharedIndex];
-
 if (shared) {
 text = shared.text;
 runs = shared.runs;
 }
 } else {
 const inline = [...cell.children].find(x => x.localName === 'is');
-
 if (inline) {
 const runNodes = [...inline.children].filter(x => x.localName === 'r');
-
 if (runNodes.length > 0) {
 runs = runNodes.map(run => {
 const t = [...run.children].find(x => x.localName === 't');
@@ -591,23 +528,18 @@ text = inline.textContent || '';
 }
 }
 }
-
 if (runs.length === 0 && text !== '') {
 runs = [{ text, italic:cellLevelItalic }];
 }
-
 const allTextItalic =
 text.length > 0 &&
 runs.length > 0 &&
 runs.every(r => r.italic);
-
 const partialItalic =
 runs.some(r => r.italic) &&
 !allTextItalic;
-
 const punctuationRegex = /[.,!?;:"'()\[\]{}\-…]/g;
 const italicPunctuation = [];
-
 if (partialItalic) {
 runs.forEach(run => {
 if (!run.italic) return;
@@ -615,7 +547,6 @@ const matches = run.text.match(punctuationRegex);
 if (matches) italicPunctuation.push(...matches);
 });
 }
-
 sheetData[ref] = {
 text,
 cellLevelItalic,
@@ -625,11 +556,9 @@ partialItalic,
 italicPunctuation: [...new Set(italicPunctuation)]
 };
 });
-
 xmlItalicData[sheetName] = sheetData;
 }
 }
-
 function getXmlItalicInfo(sheetName,cellRef) {
 const sheetData = xmlItalicData[sheetName];
 if (!sheetData || !sheetData[cellRef]) {
@@ -642,13 +571,10 @@ italicPunctuation: []
 }
 return sheetData[cellRef];
 }
-
 function getRichDialogueFromCell(cell,fallbackText,sheetName,cellRef) {
 const html = cell ? (cell.h || '') : '';
 const xmlInfo = getXmlItalicInfo(sheetName,cellRef);
-
 const htmlItalic = hasItalicFormatting(html);
-
 return {
 html: sanitizeRichHtml(html,fallbackText),
 hasItalics: xmlInfo.hasItalics || htmlItalic,
@@ -657,69 +583,53 @@ partialItalic: xmlInfo.partialItalic,
 italicPunctuation: xmlInfo.partialItalic ? xmlInfo.italicPunctuation : []
 };
 }
-
 function setupDrop() {
 const dz = document.getElementById('drop-zone');
 const fi = document.getElementById('file-input');
-
 dz.addEventListener('dragover',e => {
 e.preventDefault();
 dz.classList.add('drag-over');
 });
-
 dz.addEventListener('dragleave',() => {
 dz.classList.remove('drag-over');
 });
-
 dz.addEventListener('drop',e => {
 e.preventDefault();
 dz.classList.remove('drag-over');
 if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
 });
-
 fi.addEventListener('change',() => {
 if (fi.files[0]) loadFile(fi.files[0]);
 });
 }
-
 function loadFile(file) {
 document.getElementById('file-name-display').textContent = file.name;
-
 const reader = new FileReader();
-
 reader.onload = async e => {
 try {
 workbookBuffer = e.target.result;
-
 workbook = XLSX.read(workbookBuffer,{
 type:'array',
 raw:false,
 cellHTML:true,
 cellStyles:true
 });
-
 await loadItalicXmlData(workbookBuffer);
-
 document.getElementById('run-btn').disabled = false;
 } catch (err) {
 alert('Error reading file.');
 console.error(err);
 }
 };
-
 reader.readAsArrayBuffer(file);
 }
-
 async function runChecks() {
 if (!workbook) return;
-
 const fps = parseFloat(document.getElementById('fps-select').value);
 const sheetInput = document.getElementById('sheet-input').value.trim();
 const skip = parseInt(document.getElementById('skip-rows').value) || 1;
-
 let sheetName = sheetInput || workbook.SheetNames[0];
 let sheet = workbook.Sheets[sheetName];
-
 if (!sheet) {
 const idx = parseInt(sheetInput) - 1;
 if (!isNaN(idx) && workbook.SheetNames[idx]) {
@@ -730,41 +640,31 @@ sheetName = workbook.SheetNames[0];
 sheet = workbook.Sheets[sheetName];
 }
 }
-
 const raw = XLSX.utils.sheet_to_json(sheet,{
 header:1,
 defval:''
 });
-
 const rows = raw.slice(skip);
 const allErrorsSet = new Set();
-
 const processed = rows.map((row,idx) => {
 const excelRow = idx + skip + 1;
-
 const startTs = row[1] != null ? String(row[1]).trim() : '';
 const endTs = row[2] != null ? String(row[2]).trim() : '';
 const dialogue = row[4] != null ? String(row[4]) : '';
-
 const dialogueCell = sheet['E' + excelRow];
-
 const rich = getRichDialogueFromCell(
 dialogueCell,
 dialogue,
 sheetName,
 'E' + excelRow
 );
-
 const startF = tsToFrames(startTs,fps);
 const endF = tsToFrames(endTs,fps);
-
 let rs = '';
-
 const durF = (
 startF != null &&
 endF != null
 ) ? endF - startF : null;
-
 if (durF && durF > 0) {
 const cleanText = stripTags(dialogue).replace(/\s+/g,'');
 rs = (
@@ -772,7 +672,6 @@ cleanText.length /
 framesToSec(durF,fps)
 ).toFixed(1);
 }
-
 return {
 rowNum: excelRow,
 startTs,
@@ -789,26 +688,20 @@ endF,
 errors: []
 };
 }).filter(r => r.startTs || r.endTs || r.dialogue);
-
 processed.forEach((r,i) => {
 const errs = r.errors;
 const lines = getLines(r.dialogue);
-
 const durF = (
 r.startF != null &&
 r.endF != null
 ) ? r.endF - r.startF : null;
-
 const durS = durF != null
 ? framesToSec(durF,fps)
 : null;
-
 if (i < processed.length - 1) {
 const next = processed[i + 1];
-
 if (r.endF != null && next.startF != null) {
 const gap = next.startF - r.endF;
-
 if (isChecked('gen_overlap') && gap < 0) {
 errs.push(`Overlap (${Math.abs(gap)}f)`);
 allErrorsSet.add('Overlap');
@@ -818,102 +711,81 @@ allErrorsSet.add('Gap < 2 frames');
 }
 }
 }
-
 if (durF != null && durS != null) {
 if (isChecked('coup_mindur20') && durF < 20) {
 errs.push('Coupang Short: < 20f');
 allErrorsSet.add('Coupang Short (< 20f)');
 }
-
 if (isChecked('coup_mindur25') && durF < 25) {
 errs.push('Coupang Short: < 25f');
 allErrorsSet.add('Coupang Short (< 25f)');
 }
-
 if (isChecked('wbd_mindur1s') && durS < 1.0) {
 errs.push('WBD Short: < 1s');
 allErrorsSet.add('WBD Short (< 1s)');
 }
-
 if (isChecked('pccw_mindur1s') && durS < 1.0) {
 errs.push('PCCW Short: < 1s');
 allErrorsSet.add('PCCW Short (< 1s)');
 }
-
 if (isChecked('net_mindur1s') && durS < 1.0) {
 errs.push('Netflix Short: < 1s');
 allErrorsSet.add('Netflix Short (< 1s)');
 }
-
 if (isChecked('coup_maxdur6s') && durS > 6.0) {
 errs.push('Coupang Long: > 6s');
 allErrorsSet.add('Coupang Long (> 6s)');
 }
-
 if (isChecked('pccw_maxdur6s') && durS > 6.0) {
 errs.push('PCCW Long: > 6s');
 allErrorsSet.add('PCCW Long (> 6s)');
 }
-
 if (isChecked('wbd_maxdur8s') && durS > 8.0) {
 errs.push('WBD Long: > 8s');
 allErrorsSet.add('WBD Long (> 8s)');
 }
-
 if (isChecked('net_maxdur8s') && durS > 8.0) {
 errs.push('Netflix Long: > 8s');
 allErrorsSet.add('Netflix Long (> 8s)');
 }
 }
-
 if (isChecked('gen_emptyline') && r.dialogue.trim() === '') {
 errs.push('Empty dialogue');
 allErrorsSet.add('Empty dialogue');
 }
-
 if (lines.length > 0) {
 const cleanDialogue = stripTags(r.dialogue).trim();
-
 if (isChecked('gen_curlya') && /[\u2018\u2019\u201A\u201B]/.test(r.dialogue)) {
 errs.push('Curly apostrophe');
 allErrorsSet.add('Curly apostrophe');
 }
-
 if (isChecked('gen_multispc') && / {2,}/.test(r.dialogue)) {
 errs.push('Multiple spaces');
 allErrorsSet.add('Multiple spaces');
 }
-
 if (isChecked('gen_leadtrail') && lines.some(l => l !== l.trim())) {
 errs.push('Lead/trail space');
 allErrorsSet.add('Leading/trailing space');
 }
-
 if (isChecked('wbd_doublehyp') && /--/.test(r.dialogue)) {
 errs.push('WBD Double hyphens');
 allErrorsSet.add('WBD Double hyphens (--)');
 }
-
 if (isChecked('gen_dotseq')) {
 const dots = r.dialogue.match(/\.{2,}/g) || [];
 const bad = dots.filter(s => s.length !== 3);
-
 if (bad.length > 0) {
 errs.push(`Dots: ${bad.join(',')}`);
 allErrorsSet.add('Invalid dot sequence');
 }
 }
-
 if (isChecked('gen_ampm')) {
 const text = stripTags(r.dialogue);
-
 const matches = text.match(
 /\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
 ) || [];
-
 matches.forEach(t => {
 const normalized = t.replace(/\s+/g,' ').trim();
-
 const correct = normalized.replace(
 /\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
 (m,x) => {
@@ -921,22 +793,18 @@ const period = x.toLowerCase().replace(/\./g,'').replace(/\s/g,'');
 return ' ' + (period === 'am' ? 'a.m.' : 'p.m.');
 }
 );
-
 if (normalized !== correct) {
 errs.push(`Incorrect a.m./p.m. format: ${t}`);
 allErrorsSet.add('Incorrect a.m./p.m. format');
 }
 });
 }
-
 if (isChecked('gen_percent') && /%/.test(r.dialogue)) {
 errs.push('Percent sign must be spelled out: %');
 allErrorsSet.add('Percent sign (%)');
 }
-
 if (isChecked('gen_numtreat')) {
 const text = stripTags(r.dialogue);
-
 // Skip if entire cell is uppercase
 const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
 if (isAllUppercase) {
@@ -945,17 +813,13 @@ if (isAllUppercase) {
 const digitMatches = [
 ...text.matchAll(/\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)
 ];
-
 digitMatches.forEach(m => {
 const value = parseInt(
 m[0].replace(/,/g,'').replace(/[^\d]/g,'')
 );
-
 const index = m.index;
-
 if (isProtectedName(text,m[0])) return;
 if (isMetricContext(text,index)) return;
-
 if (isTimeContext(text,index)) {
 if (/o'clock/i.test(text.slice(index))) {
 errs.push(`Number should be spelled out: ${m[0]} o'clock`);
@@ -963,97 +827,74 @@ allErrorsSet.add('Number treatment');
 }
 return;
 }
-
 const before = text.slice(0,index).trim();
-
 if (before === '') {
 errs.push(`First word number must be spelled out: ${m[0]}`);
 allErrorsSet.add('Number treatment');
 return;
 }
-
 if (value >= 1 && value <= 10) {
 errs.push(`1-10 must be spelled out: ${m[0]}`);
 allErrorsSet.add('Number treatment');
 }
 });
-
 const wordMatches = [...text.matchAll(numberWordsRegex())];
-
 wordMatches.forEach(m => {
 const value = wordNumberToValue(m[0]);
 if (value === null) return;
-
 const index = m.index;
-
 if (/^\s*o'clock/i.test(text.slice(index + m[0].length))) return;
-
 const before = text.slice(0,index).trim();
-
 if (before === '') return;
-
 if (isMetricContext(text,index + m[0].length)) return;
-
 if (value >= 11) {
 errs.push(`11+ must use numerals: ${m[0]}`);
 allErrorsSet.add('Number treatment');
 }
 });
 }
-
+}
 if (isChecked('gen_maxlines2') && lines.length > 2) {
 errs.push(`Lines: ${lines.length}`);
 allErrorsSet.add('Too many lines');
 }
-
 if (isChecked('pccw_maxline1') && lines.length > 1) {
 errs.push(`PCCW Lines: ${lines.length}`);
 allErrorsSet.add('PCCW Exceeded 1 line');
 }
-
 if (isChecked('wbd_char37')) {
 const maxFound = Math.max(...lines.map(l => stripTags(l).length));
-
 if (maxFound > 37) {
 errs.push(`WBD Over limit: ${maxFound}ch`);
 allErrorsSet.add('WBD Char limit 37');
 }
 }
-
 if (isChecked('coup_char42')) {
 const maxFound = Math.max(...lines.map(l => stripTags(l).length));
-
 if (maxFound > 42) {
 errs.push(`Coupang Over limit: ${maxFound}ch`);
 allErrorsSet.add('Coupang Char limit 42');
 }
 }
-
 if (isChecked('net_char42')) {
 const maxFound = Math.max(...lines.map(l => stripTags(l).length));
-
 if (maxFound > 42) {
 errs.push(`Netflix Over limit: ${maxFound}ch`);
 allErrorsSet.add('Netflix Char limit 42');
 }
 }
-
 if (isChecked('pccw_char75')) {
 const maxFound = Math.max(...lines.map(l => stripTags(l).length));
-
 if (maxFound > 75) {
 errs.push(`PCCW Over limit: ${maxFound}ch`);
 allErrorsSet.add('PCCW Char limit 75');
 }
 }
-
 if (isChecked('gen_mergeable') && lines.length === 2) {
 const line1Clean = stripTags(lines[0]).trim();
 const line2Clean = stripTags(lines[1]).trim();
-
 if (!line1Clean.startsWith('-')) {
 const totalMerged = line1Clean.length + line2Clean.length + 1;
-
 const currentLimit =
 isChecked('coup_char42') ||
 isChecked('net_char42')
@@ -1061,57 +902,46 @@ isChecked('net_char42')
 : isChecked('pccw_char75')
 ? 75
 : 37;
-
 if (totalMerged <= currentLimit) {
 errs.push(`Mergeable (${totalMerged}ch)`);
 allErrorsSet.add('Mergeable to 1 line');
 }
 }
 }
-
 if (isChecked('gen_hypcon') && lines.length === 2) {
 const l1h = /^-/.test(lines[0].trim());
 const l2h = /^-/.test(lines[1].trim());
-
 if (l1h !== l2h) {
 errs.push('Hyphen inconsistency');
 allErrorsSet.add('Hyphen inconsistency');
 }
 }
-
 if (isChecked('coup_hyp_space') && lines.some(l => /^-[^\s]/.test(l.trim()))) {
 errs.push('Coupang Hyphen missing space');
 allErrorsSet.add('Coupang Hyphen missing space');
 }
-
 if (isChecked('wbd_hyp_space') && lines.some(l => /^-[^\s]/.test(l.trim()))) {
 errs.push('WBD Hyphen missing space');
 allErrorsSet.add('WBD Hyphen missing space');
 }
-
 if (isChecked('net_hyp_nospace') && lines.some(l => /^-\s/.test(l.trim()))) {
 errs.push('Netflix Space after hyphen');
 allErrorsSet.add('Netflix Space after hyphen');
 }
-
 if (isChecked('wbd_comma_det')) {
 const lastLine = lines[lines.length - 1]?.trimEnd() || '';
-
 if (lastLine.endsWith(',')) {
 errs.push('WBD Ends with comma');
 allErrorsSet.add('WBD Trailing comma');
 }
 }
-
 if (isChecked('pccw_end_punct')) {
 const validPunctRegex = /[.,?!\)]\s*$/;
-
 if (!validPunctRegex.test(cleanDialogue)) {
 errs.push('PCCW No ending punctuation');
 allErrorsSet.add('PCCW Missing punctuation');
 }
 }
-
 // GROUP 2 - PARTIAL ITALICS PUNCTUATION
 // Only flag if partialItalic AND has italicized punctuation
 // Do NOT flag if entire cell is italicized
@@ -1119,21 +949,17 @@ if (isChecked('coup_partial_italics') && r.partialItalic && r.italicPunctuation.
 errs.push(`Partial italics punctuation: ${r.italicPunctuation.join(', ')}`);
 allErrorsSet.add('Partial italics punctuation');
 }
-
 // GROUP 4 - NO ITALICS
 // Flag ALL italicized text, whether partial or entire cell
 if (isChecked('pccw_noitalics') && r.hasItalics) {
 errs.push('PCCW Italics detected');
 allErrorsSet.add('PCCW Italics detected');
 }
-
 if (isChecked('pccw_ampm')) {
 const text = stripTags(r.dialogue);
-
 const matches = text.match(
 /\b\d{1,2}(?::\d{2})?(a\.?m\.?|p\.?m\.?)\b/gi
 ) || [];
-
 matches.forEach(t => {
 if (!/^\d{1,2}(?::\d{2})?(am|pm)$/i.test(t)) {
 errs.push(`PCCW time format error: ${t}`);
@@ -1141,21 +967,17 @@ allErrorsSet.add('PCCW am/pm format');
 }
 });
 }
-
 if (isChecked('pccw_hyphen_middle')) {
 lines.forEach(line => {
 const trimmed = line.trim();
-
 if (/^-/.test(trimmed) && !trimmed.includes(' - ')) {
 errs.push('PCCW Dialogue exchange requires " - "');
 allErrorsSet.add('PCCW Hyphen exchange format');
 }
 });
 }
-
 if (isChecked('pccw_uppercase')) {
 const letters = cleanDialogue.match(/[A-Za-z]/g);
-
 if (
 letters &&
 letters.length > 0 &&
@@ -1167,19 +989,15 @@ allErrorsSet.add('PCCW All uppercase');
 }
 }
 });
-
 if (isChecked('coup_credit') && processed.length > 0) {
 const last = processed[processed.length - 1];
 const lastText = stripTags(last.dialogue);
-
 if (!/Subtitle translation by/i.test(lastText)) {
 last.errors.push("Missing translator's credit: Subtitle translation by");
 allErrorsSet.add("Missing translator's credit: Subtitle translation by");
 }
-
 if (last.startF != null && last.endF != null) {
 const lastDuration = framesToSec(last.endF - last.startF,fps);
-
 if (Math.abs(lastDuration - 2.0) > 0.0001) {
 last.errors.push(
 `Translator's credit must be 2 seconds (${lastDuration.toFixed(2)}s)`
@@ -1191,19 +1009,15 @@ last.errors.push("Translator's credit duration cannot be determined");
 allErrorsSet.add("Translator's credit duration");
 }
 }
-
 if (isChecked('wbd_credit') && processed.length > 0) {
 const last = processed[processed.length - 1];
 const lastText = stripTags(last.dialogue);
-
 if (!/Subtitles by/i.test(lastText)) {
 last.errors.push("Missing translator's credit: Subtitles by");
 allErrorsSet.add("Missing translator's credit: Subtitles by");
 }
-
 if (last.startF != null && last.endF != null) {
 const lastDuration = framesToSec(last.endF - last.startF,fps);
-
 if (Math.abs(lastDuration - 2.0) > 0.0001) {
 last.errors.push(
 `Translator's credit must be 2 seconds (${lastDuration.toFixed(2)}s)`
@@ -1215,53 +1029,41 @@ last.errors.push("Translator's credit duration cannot be determined");
 allErrorsSet.add("Translator's credit duration");
 }
 }
-
 processed.forEach(r => {
 const rsv = parseFloat(r.rs);
-
 if (!isNaN(rsv)) {
 if (isChecked('coup_rs20') && rsv > 20) {
 r.errors.push('Coupang CPS > 20');
 allErrorsSet.add('Coupang CPS > 20');
 }
-
 if (isChecked('coup_rs30') && rsv > 30) {
 r.errors.push('Coupang CPS > 30');
 allErrorsSet.add('Coupang CPS > 30');
 }
-
 if (isChecked('wbd_rs30') && rsv > 30) {
 r.errors.push('WBD CPS > 30');
 allErrorsSet.add('WBD CPS > 30');
 }
-
 if (isChecked('net_rs30') && rsv > 30) {
 r.errors.push('Netflix CPS > 30');
 allErrorsSet.add('Netflix CPS > 30');
 }
 }
 });
-
 renderResults(processed,allErrorsSet);
 }
-
 function renderResults(data,allErrorsSet) {
 const area = document.getElementById('results-area');
-
 area.style.display = 'block';
-
 area.scrollIntoView({
 behavior:'smooth',
 block:'start'
 });
-
 const errorCount = data.filter(r => r.errors.length > 0).length;
-
 const totalIssues = data.reduce(
 (s,r) => s + r.errors.length,
 0
 );
-
 document.getElementById('stats-row').innerHTML = `
 <div class="stat-box">
 <div class="val">${data.length}</div>
@@ -1276,35 +1078,26 @@ document.getElementById('stats-row').innerHTML = `
 <div class="lbl">Total Issues</div>
 </div>
 `;
-
 const etf = document.getElementById('error-type-filter');
-
 etf.innerHTML = '<option value="all">All error types</option>';
-
 [...allErrorsSet].sort().forEach(e => {
 const opt = document.createElement('option');
 opt.value = e;
 opt.textContent = e;
 etf.appendChild(opt);
 });
-
 window._tableData = data;
 applyFilter();
 }
-
 function applyFilter() {
 const filter = document.getElementById('filter-select').value;
 const etFilter = document.getElementById('error-type-filter').value;
 const tbody = document.getElementById('results-body');
-
 tbody.innerHTML = '';
-
 let visible = window._tableData || [];
-
 if (filter === 'errors') {
 visible = visible.filter(r => r.errors.length > 0);
 }
-
 if (etFilter !== 'all') {
 visible = visible.filter(r =>
 r.errors.some(e =>
@@ -1313,7 +1106,6 @@ e.toLowerCase().includes(etFilter.toLowerCase())
 )
 );
 }
-
 if (visible.length === 0) {
 tbody.innerHTML = `
 <tr>
@@ -1327,22 +1119,17 @@ No issues found!
 `;
 return;
 }
-
 visible.forEach((r,idx) => {
 const tr = document.createElement('tr');
-
 if (r.errors.length > 0) {
 tr.classList.add('has-error');
 }
-
 const tags = r.errors
 .map(e => `<span class="etag">${escHtml(e)}</span>`)
 .join('');
-
 const dialogueHtml =
 r.dialogueHtml ||
 escHtml(r.dialogue).replace(/\r?\n/g,'<br>');
-
 tr.innerHTML = `
 <td class="row-num">${idx + 1}</td>
 <td class="row-num">${r.rowNum}</td>
@@ -1356,15 +1143,12 @@ ${tags || '—'}
 </div>
 </td>
 `;
-
 tbody.appendChild(tr);
 });
 }
-
 function resetAll() {
 location.reload();
 }
-
 buildCheckboxes();
 setupDrop();
 </script>
