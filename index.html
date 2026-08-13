@@ -937,6 +937,11 @@ allErrorsSet.add('Percent sign (%)');
 if (isChecked('gen_numtreat')) {
 const text = stripTags(r.dialogue);
 
+// Skip if entire cell is uppercase
+const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
+if (isAllUppercase) {
+// Don't check number treatment for all-caps cells
+} else {
 const digitMatches = [
 ...text.matchAll(/\b\d+(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)
 ];
