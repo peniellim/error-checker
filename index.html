@@ -185,7 +185,7 @@ const CHECKS = [
 { id:'gen_emptyline', group:'General', label:'Empty line', defaultOn:true },
 { id:'gen_leadtrail', group:'General', label:'Leading/trailing space', defaultOn:true },
 { id:'gen_dotseq', group:'General', label:'Invalid dots (not 1 or 3)', defaultOn:true },
-{ id:'gen_mergeable', group:'General', label:'Fit to 1 line', defaultOn:true },
+{ id:'gen_mergeable', group:'General', label:'Fit to 1 line (mergeable)', defaultOn:true },
 { id:'gen_maxlines2', group:'General', label:'Maximum 2 lines', defaultOn:true },
 { id:'gen_hypcon', group:'General', label:'Hyphen for 2 speakers', defaultOn:true },
 { id:'gen_ampm', group:'General', label:'Time: a.m./p.m. with space', defaultOn:true },
@@ -335,8 +335,8 @@ return null;
 return found ? total + current : null;
 }
 function numberWordsRegex() {
-const nums = [...Object.keys(SMALL_NUMBERS),...Object.keys(TENS),...Object.keys(SCALES),'and'];
-return new RegExp('\\b(' + nums.join('|') + ')(?:[- ](?:' + nums.join('|') + '))*\\b','gi');
+const nums = [...Object.keys(SMALL_NUMBERS),...Object.keys(TENS),...Object.keys(SCALES)];
+return new RegExp('\\b(' + nums.join('|') + ')\\b','gi');
 }
 function isMetricContext(text,index) {
 const after = text.slice(index).match(/^\s*(kg|g|mg|km|m|cm|mm|l|ml|°c|°f)\b/i);
@@ -870,7 +870,7 @@ const before = text.slice(0, partIndex).trim();
 if (before === '') return;
 if (isMetricContext(text, partIndex + part.length)) return;
 if (value >= 11) {
-errs.push(`11+ must use numerals`);
+errs.push(`11+ must use numerals: ${part}`);
 allErrorsSet.add('Number treatment');
 }
 });
@@ -926,7 +926,7 @@ isChecked('net_char42')
 ? 75
 : 37;
 if (totalMerged <= currentLimit) {
-errs.push(`Fit to 1 line (${totalMerged}ch)`);
+errs.push(`Mergeable (${totalMerged}ch)`);
 allErrorsSet.add('Mergeable to 1 line');
 }
 }
@@ -1011,23 +1011,17 @@ allErrorsSet.add('PCCW All uppercase');
 }
 }
 
-// GROUP 2 & 4 - NUMBER TREATMENT
-// Rule: If >1 number in cell, all must be numerals
-// Exception: First word of cell or first word of sentence must be spelled out
-// Exception: Skip if all caps
-if ((isChecked('coup_numtreat') || isChecked('pccw_numtreat')) && r.dialogue.trim() !== '') {
+// GROUP 2 - COUPANG NUMBER TREATMENT
+if (isChecked('coup_numtreat') && r.dialogue.trim() !== '') {
 const text = stripTags(r.dialogue);
 const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
 
 if (!isAllUppercase) {
-// Count all numbers (digits and spelled-out)
 const digitMatches = [...text.matchAll(/\b\d+(?:\.\d+)?(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)];
 const wordMatches = [...text.matchAll(numberWordsRegex())];
 const totalNumbers = digitMatches.length + wordMatches.length;
 
 if (totalNumbers > 1) {
-// More than 1 number: check rules
-// Check each digit - should be numeral (unless first word/sentence)
 digitMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
@@ -1035,14 +1029,11 @@ const isFirstWord = index === 0;
 const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
 
 if (isFirstWord || isFirstAfterPeriod) {
-// First word or first after period: should be spelled out
-errs.push(`Number should be spelled out: ${match}`);
-const checkId = isChecked('coup_numtreat') ? 'Coupang' : 'PCCW';
-allErrorsSet.add(`${checkId} Number treatment`);
+errs.push(`Coupang Number should be spelled out: ${match}`);
+allErrorsSet.add('Coupang Number treatment');
 }
 });
 
-// Check each spelled-out number - should be numeral (unless first word/sentence)
 wordMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
@@ -1050,10 +1041,46 @@ const isFirstWord = index === 0;
 const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
 
 if (!isFirstWord && !isFirstAfterPeriod) {
-// Not first word/sentence: should be numeral
-errs.push(`Numeral: ${match}`);
-const checkId = isChecked('coup_numtreat') ? 'Coupang' : 'PCCW';
-allErrorsSet.add(`${checkId} Number treatment`);
+errs.push(`Coupang Number should be numeral: ${match}`);
+allErrorsSet.add('Coupang Number treatment');
+}
+});
+}
+}
+}
+
+// GROUP 4 - PCCW NUMBER TREATMENT
+if (isChecked('pccw_numtreat') && r.dialogue.trim() !== '') {
+const text = stripTags(r.dialogue);
+const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
+
+if (!isAllUppercase) {
+const digitMatches = [...text.matchAll(/\b\d+(?:\.\d+)?(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)];
+const wordMatches = [...text.matchAll(numberWordsRegex())];
+const totalNumbers = digitMatches.length + wordMatches.length;
+
+if (totalNumbers > 1) {
+digitMatches.forEach(m => {
+const match = m[0];
+const index = m.index;
+const isFirstWord = index === 0;
+const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
+
+if (isFirstWord || isFirstAfterPeriod) {
+errs.push(`PCCW Number should be spelled out: ${match}`);
+allErrorsSet.add('PCCW Number treatment');
+}
+});
+
+wordMatches.forEach(m => {
+const match = m[0];
+const index = m.index;
+const isFirstWord = index === 0;
+const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
+
+if (!isFirstWord && !isFirstAfterPeriod) {
+errs.push(`PCCW Number should be numeral: ${match}`);
+allErrorsSet.add('PCCW Number treatment');
 }
 });
 }
