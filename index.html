@@ -190,6 +190,7 @@ const CHECKS = [
 { id:'gen_hypcon', group:'General', label:'Hyphen for 2 speakers', defaultOn:true },
 { id:'gen_ampm', group:'General', label:'Time: a.m./p.m. with space', defaultOn:true },
 { id:'gen_percent', group:'General', label:'Percent: spell out %', defaultOn:true },
+{ id:'gen_ellipsis', group:'General', label:'Missing ellipsis (gap ≥ 2s)', defaultOn:true },
 { id:'coup_mindur20', group:'Coupang', label:'Min duration 20 frames', defaultOn:true },
 { id:'coup_mindur25', group:'Coupang', label:'Min duration 25 frames', defaultOn:true },
 { id:'coup_maxdur6s', group:'Coupang', label:'Max duration 6 seconds', defaultOn:true },
@@ -710,6 +711,19 @@ allErrorsSet.add('Overlap');
 } else if (isChecked('gen_gap2') && gap >= 0 && gap < 2) {
 errs.push(`Gap < 2f (${gap}f)`);
 allErrorsSet.add('Gap < 2 frames');
+}
+// ELLIPSIS CHECK: gap >= 2 seconds, no ending punctuation, no existing ellipsis
+if (isChecked('gen_ellipsis')) {
+const gapSeconds = framesToSec(gap, fps);
+const cleanText = stripTags(r.dialogue).trim();
+const isAllUppercase = cleanText.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(cleanText);
+const hasEndingPunct = /[.!?,;:]$/.test(cleanText);
+const hasEllipsis = /\.\.\.+$/.test(cleanText);
+const endsInDoubleQuote = /"$/.test(cleanText);
+if (gapSeconds >= 2.0 && !hasEndingPunct && !hasEllipsis && !isAllUppercase && !endsInDoubleQuote) {
+errs.push(`Missing ellipsis (gap ${gapSeconds.toFixed(1)}s)`);
+allErrorsSet.add('Missing ellipsis');
+}
 }
 }
 }
