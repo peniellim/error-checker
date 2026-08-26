@@ -788,12 +788,17 @@ const matches = text.match(
 ) || [];
 matches.forEach(t => {
 const normalized = t.replace(/\s+/g,' ').trim();
+// Extract the a.m./p.m. part to preserve case
+const ampmMatch = normalized.match(/([ap])\.?\s*([m])\.?$/i);
+if (!ampmMatch) return; // Skip if not a valid a.m./p.m. format
+const ampmPart = ampmMatch[1] + ampmMatch[2]; // 'am' or 'pm'
+const isUppercase = /[A-Z]/.test(normalized);
+const correctFormat = isUppercase 
+  ? (ampmPart.toUpperCase() === 'AM' ? 'A.M.' : 'P.M.')
+  : (ampmPart.toLowerCase() === 'am' ? 'a.m.' : 'p.m.');
 const correct = normalized.replace(
-/\s*(a\.?\s*m\.?|p\.?\s*m\.?)\.?$/i,
-(m,x) => {
-const period = x.toLowerCase().replace(/\./g,'').replace(/\s/g,'');
-return ' ' + (period === 'am' ? 'a.m.' : 'p.m.');
-}
+  /[ap]\.?\s*[m]\.?$/i,
+  correctFormat
 );
 if (normalized !== correct) {
 errs.push(`Incorrect a.m./p.m. format: ${t}`);
