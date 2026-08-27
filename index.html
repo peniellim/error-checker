@@ -191,6 +191,7 @@ const CHECKS = [
 { id:'gen_ampm', group:'General', label:'Time: a.m./p.m. with space', defaultOn:true },
 { id:'gen_percent', group:'General', label:'Percent: spell out %', defaultOn:true },
 { id:'gen_ellipsis', group:'General', label:'Missing ellipsis (gap ≥ 2s)', defaultOn:true },
+{ id:'gen_parenthesis', group:'General', label:'Parenthesis detected', defaultOn:true },
 { id:'coup_mindur20', group:'Coupang', label:'Min duration 20 frames', defaultOn:true },
 { id:'coup_mindur25', group:'Coupang', label:'Min duration 25 frames', defaultOn:true },
 { id:'coup_maxdur6s', group:'Coupang', label:'Max duration 6 seconds', defaultOn:true },
@@ -823,6 +824,11 @@ allErrorsSet.add('Incorrect a.m./p.m. format');
 if (isChecked('gen_percent') && /%/.test(r.dialogue)) {
 errs.push('Percent sign must be spelled out: %');
 allErrorsSet.add('Percent sign (%)');
+}
+if (isChecked('gen_parenthesis') && /[()[\]{}]/.test(r.dialogue)) {
+const matches = r.dialogue.match(/[()[\]{}]/g) || [];
+errs.push(`Parenthesis: ${matches.join('')}`);
+allErrorsSet.add('Parenthesis detected');
 }
 if (isChecked('gen_numtreat')) {
 const text = stripTags(r.dialogue);
