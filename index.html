@@ -153,7 +153,6 @@ tbody tr:not(.has-error):hover { background: #fafafa; }
 <table id="results-table">
 <thead>
 <tr>
-<th>#</th>
 <th>Row</th>
 <th>Start (B)</th>
 <th>End (C)</th>
@@ -185,7 +184,7 @@ const CHECKS = [
 { id:'gen_emptyline', group:'General', label:'Empty line', defaultOn:true },
 { id:'gen_leadtrail', group:'General', label:'Leading/trailing space', defaultOn:true },
 { id:'gen_dotseq', group:'General', label:'Invalid dots (not 1 or 3)', defaultOn:true },
-{ id:'gen_mergeable', group:'General', label:'Fit to 1 line (mergeable)', defaultOn:true },
+{ id:'gen_mergeable', group:'General', label:'Fit to 1 line', defaultOn:true },
 { id:'gen_maxlines2', group:'General', label:'Maximum 2 lines', defaultOn:true },
 { id:'gen_hypcon', group:'General', label:'Hyphen for 2 speakers', defaultOn:true },
 { id:'gen_ampm', group:'General', label:'Time: a.m./p.m. with space', defaultOn:true },
@@ -443,8 +442,6 @@ italicFonts = fonts.map((font, idx) => {
 const hasItalic = [...font.children].some(child => child.localName === 'i');
 return hasItalic;
 });
-// PRE-LOAD cellXfs from styles.xml (not from sheet XML)
-// Find the cellXfs element specifically, not cellStyleXfs
 const cellXfsElement = [...stylesDoc.getElementsByTagName('*')].find(el => el.localName === 'cellXfs');
 if (cellXfsElement) {
   cellXfsGlobal = [...cellXfsElement.children].filter(el => el.localName === 'xf');
@@ -493,7 +490,6 @@ const ref = cell.getAttribute('r');
 if (!ref) return;
 const styleIndex = parseInt(cell.getAttribute('s') || '0',10);
 let cellLevelItalic = false;
-// Use pre-loaded cellXfsGlobal from styles.xml
 if (!isNaN(styleIndex) && cellXfsGlobal && cellXfsGlobal[styleIndex]) {
 const fontId = parseInt(cellXfsGlobal[styleIndex].getAttribute('fontId') || '0',10);
 cellLevelItalic = !!italicFonts[fontId];
@@ -713,7 +709,6 @@ allErrorsSet.add('Overlap');
 errs.push(`Gap < 2f (${gap}f)`);
 allErrorsSet.add('Gap < 2 frames');
 }
-// ELLIPSIS CHECK: gap >= 2 seconds, no ending punctuation, no existing ellipsis
 if (isChecked('gen_ellipsis')) {
 const gapSeconds = framesToSec(gap, fps);
 const cleanText = stripTags(r.dialogue).trim();
@@ -803,10 +798,9 @@ const matches = text.match(
 ) || [];
 matches.forEach(t => {
 const normalized = t.replace(/\s+/g,' ').trim();
-// Extract the a.m./p.m. part to preserve case
 const ampmMatch = normalized.match(/([ap])\.?\s*([m])\.?$/i);
-if (!ampmMatch) return; // Skip if not a valid a.m./p.m. format
-const ampmPart = ampmMatch[1] + ampmMatch[2]; // 'am' or 'pm'
+if (!ampmMatch) return;
+const ampmPart = ampmMatch[1] + ampmMatch[2];
 const isUppercase = /[A-Z]/.test(normalized);
 const correctFormat = isUppercase 
   ? (ampmPart.toUpperCase() === 'AM' ? 'A.M.' : 'P.M.')
@@ -822,7 +816,7 @@ allErrorsSet.add('Incorrect a.m./p.m. format');
 });
 }
 if (isChecked('gen_percent') && /%/.test(r.dialogue)) {
-errs.push('Percent sign must be spelled out: %');
+errs.push('Spell out percent');
 allErrorsSet.add('Percent sign (%)');
 }
 if (isChecked('gen_parenthesis') && /[()[\]{}]/.test(r.dialogue)) {
@@ -832,52 +826,44 @@ allErrorsSet.add('Parenthesis detected');
 }
 if (isChecked('gen_numtreat')) {
 const text = stripTags(r.dialogue);
-// Skip if entire cell is uppercase
 const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
 if (isAllUppercase) {
-// Don't check number treatment for all-caps cells
 } else {
-// Handle digits (integers, decimals, with ordinals)
 const digitMatches = [
 ...text.matchAll(/\b\d+(?:\.\d+)?(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)
 ];
 digitMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
-
-// Extract integer part for value comparison
 const integerPart = parseInt(match.replace(/[^\d]/g,''));
 if (isNaN(integerPart)) return;
 if (isProtectedName(text,match)) return;
 if (isMetricContext(text,index)) return;
 if (isTimeContext(text,index)) {
 if (/o'clock/i.test(text.slice(index))) {
-errs.push(`Number should be spelled out: ${match} o'clock`);
+errs.push(`Spell out number`);
 allErrorsSet.add('Number treatment');
 }
 return;
 }
-// Allow numerals for sub-10 numbers with decimals (1.5, 9.99, etc.)
 if (integerPart >= 1 && integerPart <= 10 && /\.\d+/.test(match)) {
-return; // Allow decimal numbers under 10
+return;
 }
 const before = text.slice(0,index).trim();
 if (before === '') {
-errs.push(`First word number must be spelled out: ${match}`);
+errs.push(`Spell out number`);
 allErrorsSet.add('Number treatment');
 return;
 }
 if (integerPart >= 1 && integerPart <= 10) {
-errs.push(`1-10 must be spelled out: ${match}`);
+errs.push(`Spell out number`);
 allErrorsSet.add('Number treatment');
 }
 });
-// Handle spelled-out numbers - parse each separately
 const wordMatches = [...text.matchAll(numberWordsRegex())];
 wordMatches.forEach(m => {
 const fullMatch = m[0];
 const index = m.index;
-// Split on 'and' to get individual numbers
 const parts = fullMatch.toLowerCase()
 .replace(/-/g,' ')
 .split(/\s+and\s+|\s+/)
@@ -885,7 +871,6 @@ const parts = fullMatch.toLowerCase()
 parts.forEach((part, partIdx) => {
 const value = wordNumberToValue(part);
 if (value === null) return;
-// Calculate position in original text
 let partIndex = index;
 if (partIdx > 0) {
 partIndex = text.indexOf(part, index);
@@ -951,8 +936,8 @@ isChecked('net_char42')
 ? 75
 : 37;
 if (totalMerged <= currentLimit) {
-errs.push(`Mergeable (${totalMerged}ch)`);
-allErrorsSet.add('Mergeable to 1 line');
+errs.push(`Fit to 1 line`);
+allErrorsSet.add('Fit to 1 line');
 }
 }
 }
@@ -990,28 +975,20 @@ errs.push('PCCW No ending punctuation');
 allErrorsSet.add('PCCW Missing punctuation');
 }
 }
-// GROUP 2 - PARTIAL ITALICS PUNCTUATION
-// Only flag if partialItalic AND has italicized punctuation
-// Do NOT flag if entire cell is italicized
 if (isChecked('coup_partial_italics') && r.partialItalic && r.italicPunctuation.length > 0) {
 errs.push(`Partial italics punctuation: ${r.italicPunctuation.join(', ')}`);
 allErrorsSet.add('Partial italics punctuation');
 }
-// GROUP 4 - NO ITALICS
-// Flag ALL italicized text, whether partial or entire cell
 if (isChecked('pccw_noitalics') && r.hasItalics) {
 errs.push('PCCW Italics detected');
 allErrorsSet.add('PCCW Italics detected');
 }
 if (isChecked('pccw_ampm')) {
 const text = stripTags(r.dialogue);
-// Match both: no-space format (10am) and space format (10 a.m., 10 am, etc)
 const matches = text.match(
 /\b\d{1,2}(?::\d{2})?(?:\s+)?(?:a\.?m\.?|p\.?m\.?)/gi
 ) || [];
 matches.forEach(t => {
-// Valid format: digits + optional colon+digits + NO space + am or pm (lowercase, no periods)
-// Example: "10am", "9:30pm"
 if (!/^\d{1,2}(?::\d{2})?(am|pm)$/i.test(t)) {
 errs.push(`PCCW time format error: ${t}`);
 allErrorsSet.add('PCCW am/pm format');
@@ -1022,7 +999,7 @@ if (isChecked('pccw_hyphen_middle')) {
 lines.forEach(line => {
 const trimmed = line.trim();
 if (/^-/.test(trimmed) && !trimmed.includes(' - ')) {
-errs.push('PCCW Dialogue exchange requires " - "');
+errs.push('Missing hyphen');
 allErrorsSet.add('PCCW Hyphen exchange format');
 }
 });
@@ -1038,76 +1015,62 @@ errs.push('PCCW All uppercase');
 allErrorsSet.add('PCCW All uppercase');
 }
 }
-
-// GROUP 2 - COUPANG NUMBER TREATMENT
 if (isChecked('coup_numtreat') && r.dialogue.trim() !== '') {
 const text = stripTags(r.dialogue);
 const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
-
 if (!isAllUppercase) {
 const digitMatches = [...text.matchAll(/\b\d+(?:\.\d+)?(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)];
 const wordMatches = [...text.matchAll(numberWordsRegex())];
 const totalNumbers = digitMatches.length + wordMatches.length;
-
 if (totalNumbers > 1) {
 digitMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
 const isFirstWord = index === 0;
 const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
-
 if (isFirstWord || isFirstAfterPeriod) {
-errs.push(`Coupang Number should be spelled out: ${match}`);
+errs.push(`Spell out number`);
 allErrorsSet.add('Coupang Number treatment');
 }
 });
-
 wordMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
 const isFirstWord = index === 0;
 const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
-
 if (!isFirstWord && !isFirstAfterPeriod) {
-errs.push(`Coupang Number should be numeral: ${match}`);
+errs.push(`Should be in numeral`);
 allErrorsSet.add('Coupang Number treatment');
 }
 });
 }
 }
 }
-
-// GROUP 4 - PCCW NUMBER TREATMENT
 if (isChecked('pccw_numtreat') && r.dialogue.trim() !== '') {
 const text = stripTags(r.dialogue);
 const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
-
 if (!isAllUppercase) {
 const digitMatches = [...text.matchAll(/\b\d+(?:\.\d+)?(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)];
 const wordMatches = [...text.matchAll(numberWordsRegex())];
 const totalNumbers = digitMatches.length + wordMatches.length;
-
 if (totalNumbers > 1) {
 digitMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
 const isFirstWord = index === 0;
 const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
-
 if (isFirstWord || isFirstAfterPeriod) {
-errs.push(`PCCW Number should be spelled out: ${match}`);
+errs.push(`Spell out number`);
 allErrorsSet.add('PCCW Number treatment');
 }
 });
-
 wordMatches.forEach(m => {
 const match = m[0];
 const index = m.index;
 const isFirstWord = index === 0;
 const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
-
 if (!isFirstWord && !isFirstAfterPeriod) {
-errs.push(`PCCW Number should be numeral: ${match}`);
+errs.push(`Should be in numeral`);
 allErrorsSet.add('PCCW Number treatment');
 }
 });
@@ -1236,7 +1199,7 @@ e.toLowerCase().includes(etFilter.toLowerCase())
 if (visible.length === 0) {
 tbody.innerHTML = `
 <tr>
-<td colspan="7">
+<td colspan="6">
 <div class="no-errors">
 <div class="big">✓</div>
 No issues found!
@@ -1258,7 +1221,6 @@ const dialogueHtml =
 r.dialogueHtml ||
 escHtml(r.dialogue).replace(/\r?\n/g,'<br>');
 tr.innerHTML = `
-<td class="row-num">${idx + 1}</td>
 <td class="row-num">${r.rowNum}</td>
 <td class="ts">${escHtml(r.startTs)}</td>
 <td class="ts">${escHtml(r.endTs)}</td>
