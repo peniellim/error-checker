@@ -975,7 +975,7 @@ errs.push('PCCW No ending punctuation');
 allErrorsSet.add('PCCW Missing punctuation');
 }
 }
-if (isChecked('coup_partial_italics') && r.partialItalic && r.italicPunctuation.length > 0) {
+if (isChecked('coup_partial_italics') && r.partialItalic && !r.allTextItalic && r.italicPunctuation.length > 0) {
 errs.push(`Partial italics punctuation: ${r.italicPunctuation.join(', ')}`);
 allErrorsSet.add('Partial italics punctuation');
 }
