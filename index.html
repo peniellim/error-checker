@@ -534,9 +534,9 @@ runs = [{ text, italic:cellLevelItalic }];
 const allTextItalic =
 text.length > 0 &&
 runs.length > 0 &&
-runs.every(r => r.italic);
+runs.every(r => r.italic || /^\s*$/.test(r.text));
 const partialItalic =
-runs.some(r => r.italic) &&
+runs.some(r => r.italic && !/^\s*$/.test(r.text)) &&
 !allTextItalic;
 const punctuationRegex = /[.,!?;:"'()\[\]{}\-…]/g;
 const italicPunctuation = [];
