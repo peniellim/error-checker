@@ -223,16 +223,14 @@ const CHECKS = [
 { id:'net_mindur20', group:'Netflix', label:'Min duration 20 frames', defaultOn:true },
 { id:'net_mindur25', group:'Netflix', label:'Min duration 25 frames', defaultOn:true },
 { id:'net_maxdur7s', group:'Netflix', label:'Max duration 7 seconds', defaultOn:true },
-{ id:'net_hypcon', group:'Netflix', label:'Hyphen for 2 speakers', defaultOn:true },
 { id:'net_hyp_nospace', group:'Netflix', label:'No spacing after hyphen', defaultOn:true },
 { id:'net_char42', group:'Netflix', label:'Character limit: 42', defaultOn:true },
 { id:'net_rs2210', group:'Netflix', label:'Reading speed: 22.10', defaultOn:true },
-{ id:'net_gap3to12', group:'Netflix', label:'3-12 frame gap', defaultOn:true },
+{ id:'net_gap3to11', group:'Netflix', label:'3-11 frame gap', defaultOn:true },
 { id:'net_percent', group:'Netflix', label:'Use percent (%) sign', defaultOn:true },
 { id:'net_noitalics', group:'Netflix', label:'No italics in FN', defaultOn:true },
-{ id:'net_ellipsis', group:'Netflix', label:'Missing ellipsis', defaultOn:true },
+{ id:'net_ellipsis', group:'Netflix', label:'Missing ellipsis (…)', defaultOn:true },
 { id:'net_numtreat', group:'Netflix', label:'Number treatment', defaultOn:true },
-{ id:'net_ampm', group:'Netflix', label:'Time: a.m./p.m. with space', defaultOn:true },
 { id:'net_credit', group:'Netflix', label:"Translator's credit", defaultOn:true }
 ];
 let workbook = null;
@@ -776,10 +774,10 @@ errs.push(`Missing ellipsis (gap ${gapSeconds.toFixed(1)}s)`);
 allErrorsSet.add('Missing ellipsis');
 }
 }
-if (isChecked('net_gap3to12')) {
-if (gap >= 3 && gap <= 12) {
-errs.push(`Netflix Gap: ${gap}f (3-12f not allowed)`);
-allErrorsSet.add('Netflix Gap 3-12f');
+if (isChecked('net_gap3to11')) {
+if (gap >= 3 && gap <= 11) {
+errs.push(`Netflix Gap: ${gap}f (3-11f not allowed)`);
+allErrorsSet.add('Netflix Gap 3-11f');
 }
 }
 }
@@ -1099,14 +1097,45 @@ allErrorsSet.add('Netflix Italics in all caps');
 }
 if (isChecked('net_ellipsis') && i < processed.length - 1) {
 const next = processed[i + 1];
+const nextNext = i < processed.length - 2 ? processed[i + 2] : null;
 if (r.endF != null && next.startF != null) {
 const gap = next.startF - r.endF;
 const gapSeconds = framesToSec(gap, fps);
 const cleanText = stripTags(r.dialogue).trim();
+const nextText = stripTags(next.dialogue).trim();
+const nextNextText = nextNext ? stripTags(nextNext.dialogue).trim() : '';
+const isAllUppercase = cleanText.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(cleanText);
+const nextIsAllUppercase = nextText.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(nextText);
+const nextNextStartsLower = nextNextText.length > 0 && /^[a-z]/.test(nextNextText);
+const hasEndingPunct = /[.!?,;:…]$/.test(cleanText);
+const endsInDoubleQuote = /"$/.test(cleanText);
 const hasProperEllipsis = /…$/.test(cleanText);
-if (gapSeconds >= 2.0 && !hasProperEllipsis) {
+
+// Skip all checks if ends in double quotation
+if (endsInDoubleQuote) {
+return;
+}
+
+// Rule 1: Basic ellipsis rule (gap >= 2s, no ending punctuation, not all caps)
+if (gapSeconds >= 2.0 && !isAllUppercase && !hasEndingPunct && !hasProperEllipsis) {
 errs.push(`Netflix Missing ellipsis (…)`);
 allErrorsSet.add('Netflix Missing ellipsis');
+}
+
+// Rule 2: Continuation ellipsis (ends in comma/no punct + next is all caps + next-next starts lowercase)
+if (nextIsAllUppercase && nextNextStartsLower && nextNext) {
+const currentEndsCommaOrNoPunct = /[,]$/.test(cleanText) || !/[.!?,;:…]$/.test(cleanText);
+const currentHasEllipsis = /…$/.test(cleanText);
+const nextNextStartsEllipsis = /^…/.test(nextNextText);
+
+if (currentEndsCommaOrNoPunct && !currentHasEllipsis) {
+errs.push(`Netflix Missing ellipsis (…) before all-caps`);
+allErrorsSet.add('Netflix Missing ellipsis');
+}
+if (!nextNextStartsEllipsis) {
+nextNext.errors.push(`Netflix Missing ellipsis (…) after all-caps`);
+allErrorsSet.add('Netflix Missing ellipsis');
+}
 }
 }
 }
@@ -1120,30 +1149,6 @@ errs.push(`Netflix First word must be spelled out: ${firstWord}`);
 allErrorsSet.add('Netflix Number treatment');
 }
 }
-}
-if (isChecked('net_ampm')) {
-const text = stripTags(r.dialogue);
-const matches = text.match(
-/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
-) || [];
-matches.forEach(t => {
-const normalized = t.replace(/\s+/g,' ').trim();
-const ampmMatch = normalized.match(/([ap])\.?\s*([m])\.?$/i);
-if (!ampmMatch) return;
-const ampmPart = ampmMatch[1] + ampmMatch[2];
-const isUppercase = /[A-Z]/.test(normalized);
-const correctFormat = isUppercase 
-  ? (ampmPart.toUpperCase() === 'AM' ? 'A.M.' : 'P.M.')
-  : (ampmPart.toLowerCase() === 'am' ? 'a.m.' : 'p.m.');
-const correct = normalized.replace(
-  /[ap]\.?\s*[m]\.?$/i,
-  correctFormat
-);
-if (normalized !== correct) {
-errs.push(`Netflix Incorrect a.m./p.m. format: ${t}`);
-allErrorsSet.add('Netflix a.m./p.m. format');
-}
-});
 }
 if (isChecked('coup_numtreat') && r.dialogue.trim() !== '') {
 const text = stripTags(r.dialogue);
