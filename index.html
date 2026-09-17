@@ -220,12 +220,20 @@ const CHECKS = [
 { id:'pccw_ampm', group:'PCCW', label:'Time: am/pm without space', defaultOn:true },
 { id:'pccw_hyphen_middle', group:'PCCW', label:'Hyphen for dialogue exchange', defaultOn:true },
 { id:'pccw_uppercase', group:'PCCW', label:'All uppercase', defaultOn:true },
-{ id:'net_mindur1s', group:'Netflix', label:'Min duration 1 second', defaultOn:true },
-{ id:'net_maxdur8s', group:'Netflix', label:'Max duration 8 seconds', defaultOn:true },
+{ id:'net_mindur20', group:'Netflix', label:'Min duration 20 frames', defaultOn:true },
+{ id:'net_mindur25', group:'Netflix', label:'Min duration 25 frames', defaultOn:true },
+{ id:'net_maxdur7s', group:'Netflix', label:'Max duration 7 seconds', defaultOn:true },
 { id:'net_hypcon', group:'Netflix', label:'Hyphen for 2 speakers', defaultOn:true },
 { id:'net_hyp_nospace', group:'Netflix', label:'No spacing after hyphen', defaultOn:true },
 { id:'net_char42', group:'Netflix', label:'Character limit: 42', defaultOn:true },
-{ id:'net_rs30', group:'Netflix', label:'Over 30 CPS', defaultOn:true }
+{ id:'net_rs2210', group:'Netflix', label:'Reading speed: 22.10', defaultOn:true },
+{ id:'net_gap3to12', group:'Netflix', label:'3-12 frame gap', defaultOn:true },
+{ id:'net_percent', group:'Netflix', label:'Use percent (%) sign', defaultOn:true },
+{ id:'net_noitalics', group:'Netflix', label:'No italics in FN', defaultOn:true },
+{ id:'net_ellipsis', group:'Netflix', label:'Missing ellipsis', defaultOn:true },
+{ id:'net_numtreat', group:'Netflix', label:'Number treatment', defaultOn:true },
+{ id:'net_ampm', group:'Netflix', label:'Time: a.m./p.m. with space', defaultOn:true },
+{ id:'net_credit', group:'Netflix', label:"Translator's credit", defaultOn:true }
 ];
 let workbook = null;
 let workbookBuffer = null;
@@ -536,8 +544,55 @@ text.length > 0 &&
 runs.length > 0 &&
 runs.every(r => r.italic || /^\s*$/.test(r.text));
 const partialItalic =
-runs.some(r => r.italic && !/^\s*$/.test(r.text)) &&
-!allTextItalic;
+(() => {
+  if (!runs.some(r => r.italic && !/^\s*$/.test(r.text))) return false;
+  if (allTextItalic) return false;
+  
+  // Check if dialogue has hyphen-separated lines (different speakers)
+  const lines = text.split(/\n/);
+  const hasHyphenLines = lines.some(l => /^-\s/.test(l.trim()));
+  
+  if (hasHyphenLines) {
+    // Evaluate each line separately
+    for (const line of lines) {
+      if (!/^-\s/.test(line.trim()) || line.trim() === '') continue;
+      
+      // Find runs for this line
+      let lineStartIndex = text.indexOf(line);
+      let lineEndIndex = lineStartIndex + line.length;
+      
+      // Check if this specific line has mixed italics
+      let lineHasItalic = false;
+      let lineHasNonItalic = false;
+      let currentIndex = 0;
+      
+      for (const run of runs) {
+        const runEnd = currentIndex + run.text.length;
+        // Check if run overlaps with this line
+        if (runEnd > lineStartIndex && currentIndex < lineEndIndex) {
+          if (/^\s*$/.test(run.text)) {
+            // Skip whitespace-only runs
+          } else if (run.italic) {
+            lineHasItalic = true;
+          } else {
+            lineHasNonItalic = true;
+          }
+        }
+        currentIndex = runEnd;
+      }
+      
+      // If this line has mixed italics, it's partial
+      if (lineHasItalic && lineHasNonItalic) {
+        return true;
+      }
+    }
+    return false;
+  } else {
+    // No hyphen lines - use original logic
+    return runs.some(r => r.italic && !/^\s*$/.test(r.text)) &&
+           !allTextItalic;
+  }
+})();
 const punctuationRegex = /[.,!?;:"'()\[\]{}\-…]/g;
 const italicPunctuation = [];
 if (partialItalic) {
@@ -721,6 +776,12 @@ errs.push(`Missing ellipsis (gap ${gapSeconds.toFixed(1)}s)`);
 allErrorsSet.add('Missing ellipsis');
 }
 }
+if (isChecked('net_gap3to12')) {
+if (gap >= 3 && gap <= 12) {
+errs.push(`Netflix Gap: ${gap}f (3-12f not allowed)`);
+allErrorsSet.add('Netflix Gap 3-12f');
+}
+}
 }
 }
 if (durF != null && durS != null) {
@@ -740,9 +801,13 @@ if (isChecked('pccw_mindur1s') && durS < 1.0) {
 errs.push('PCCW Short: < 1s');
 allErrorsSet.add('PCCW Short (< 1s)');
 }
-if (isChecked('net_mindur1s') && durS < 1.0) {
-errs.push('Netflix Short: < 1s');
-allErrorsSet.add('Netflix Short (< 1s)');
+if (isChecked('net_mindur20') && durF < 20) {
+errs.push('Netflix Short: < 20f');
+allErrorsSet.add('Netflix Short (< 20f)');
+}
+if (isChecked('net_mindur25') && durF < 25) {
+errs.push('Netflix Short: < 25f');
+allErrorsSet.add('Netflix Short (< 25f)');
 }
 if (isChecked('coup_maxdur6s') && durS > 6.0) {
 errs.push('Coupang Long: > 6s');
@@ -756,9 +821,9 @@ if (isChecked('wbd_maxdur8s') && durS > 8.0) {
 errs.push('WBD Long: > 8s');
 allErrorsSet.add('WBD Long (> 8s)');
 }
-if (isChecked('net_maxdur8s') && durS > 8.0) {
-errs.push('Netflix Long: > 8s');
-allErrorsSet.add('Netflix Long (> 8s)');
+if (isChecked('net_maxdur7s') && durS > 7.0) {
+errs.push('Netflix Long: > 7s');
+allErrorsSet.add('Netflix Long (> 7s)');
 }
 }
 if (isChecked('gen_emptyline') && r.dialogue.trim() === '') {
@@ -1015,6 +1080,71 @@ errs.push('PCCW All uppercase');
 allErrorsSet.add('PCCW All uppercase');
 }
 }
+// NETFLIX CHECKS
+if (isChecked('net_percent') && !/%/.test(r.dialogue)) {
+// Netflix requires % sign, not spelled out
+const hasPercentWord = /\bpercent\b/i.test(stripTags(r.dialogue));
+if (hasPercentWord) {
+errs.push('Netflix Use % sign');
+allErrorsSet.add('Netflix Use % sign');
+}
+}
+if (isChecked('net_noitalics')) {
+const text = stripTags(r.dialogue).trim();
+const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
+if (isAllUppercase && r.hasItalics) {
+errs.push('Netflix All caps cannot have italics');
+allErrorsSet.add('Netflix Italics in all caps');
+}
+}
+if (isChecked('net_ellipsis') && i < processed.length - 1) {
+const next = processed[i + 1];
+if (r.endF != null && next.startF != null) {
+const gap = next.startF - r.endF;
+const gapSeconds = framesToSec(gap, fps);
+const cleanText = stripTags(r.dialogue).trim();
+const hasProperEllipsis = /…$/.test(cleanText);
+if (gapSeconds >= 2.0 && !hasProperEllipsis) {
+errs.push(`Netflix Missing ellipsis (…)`);
+allErrorsSet.add('Netflix Missing ellipsis');
+}
+}
+}
+if (isChecked('net_numtreat') && r.dialogue.trim() !== '') {
+const text = stripTags(r.dialogue);
+const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
+if (!isAllUppercase) {
+const firstWord = text.trim().split(/[\s.,!?;:]/)[0];
+if (/^\d+/.test(firstWord)) {
+errs.push(`Netflix First word must be spelled out: ${firstWord}`);
+allErrorsSet.add('Netflix Number treatment');
+}
+}
+}
+if (isChecked('net_ampm')) {
+const text = stripTags(r.dialogue);
+const matches = text.match(
+/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi
+) || [];
+matches.forEach(t => {
+const normalized = t.replace(/\s+/g,' ').trim();
+const ampmMatch = normalized.match(/([ap])\.?\s*([m])\.?$/i);
+if (!ampmMatch) return;
+const ampmPart = ampmMatch[1] + ampmMatch[2];
+const isUppercase = /[A-Z]/.test(normalized);
+const correctFormat = isUppercase 
+  ? (ampmPart.toUpperCase() === 'AM' ? 'A.M.' : 'P.M.')
+  : (ampmPart.toLowerCase() === 'am' ? 'a.m.' : 'p.m.');
+const correct = normalized.replace(
+  /[ap]\.?\s*[m]\.?$/i,
+  correctFormat
+);
+if (normalized !== correct) {
+errs.push(`Netflix Incorrect a.m./p.m. format: ${t}`);
+allErrorsSet.add('Netflix a.m./p.m. format');
+}
+});
+}
 if (isChecked('coup_numtreat') && r.dialogue.trim() !== '') {
 const text = stripTags(r.dialogue);
 const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
@@ -1119,6 +1249,26 @@ last.errors.push("Translator's credit duration cannot be determined");
 allErrorsSet.add("Translator's credit duration");
 }
 }
+if (isChecked('net_credit') && processed.length > 0) {
+const last = processed[processed.length - 1];
+const lastText = stripTags(last.dialogue);
+if (!/Translation by:/i.test(lastText)) {
+last.errors.push("Missing Netflix credit: Translation by:");
+allErrorsSet.add("Netflix Missing 'Translation by:'");
+}
+if (last.startF != null && last.endF != null) {
+const lastDuration = framesToSec(last.endF - last.startF,fps);
+if (Math.abs(lastDuration - 2.0) > 0.0001) {
+last.errors.push(
+`Netflix credit must be 2 seconds (${lastDuration.toFixed(2)}s)`
+);
+allErrorsSet.add("Netflix Translator's credit duration");
+}
+} else {
+last.errors.push("Netflix credit duration cannot be determined");
+allErrorsSet.add("Netflix Translator's credit duration");
+}
+}
 processed.forEach(r => {
 const rsv = parseFloat(r.rs);
 if (!isNaN(rsv)) {
@@ -1134,9 +1284,9 @@ if (isChecked('wbd_rs30') && rsv > 30) {
 r.errors.push('WBD CPS > 30');
 allErrorsSet.add('WBD CPS > 30');
 }
-if (isChecked('net_rs30') && rsv > 30) {
-r.errors.push('Netflix CPS > 30');
-allErrorsSet.add('Netflix CPS > 30');
+if (isChecked('net_rs2210') && rsv > 22.1) {
+r.errors.push('Netflix CPS > 22.10');
+allErrorsSet.add('Netflix CPS > 22.10');
 }
 }
 });
