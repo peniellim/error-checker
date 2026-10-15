@@ -122,12 +122,8 @@ tbody tr:not(.has-error):hover { background: #fafafa; }
 </div>
 </div>
 <div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+<div style="margin-bottom:1rem;">
 <div class="card-title" style="margin:0;">Checks to run</div>
-<div style="display:flex;gap:0.75rem;">
-<button class="toggle-all" onclick="toggleAll(true)">Select all</button>
-<button class="toggle-all" onclick="toggleAll(false)">Deselect all</button>
-</div>
 </div>
 <div class="groups-container" id="groups-container"></div>
 <div class="controls-row">
@@ -248,6 +244,13 @@ groupSection.className = 'group-section';
 const heading = document.createElement('div');
 heading.className = 'group-heading';
 heading.innerHTML = `Group ${gIdx + 1}: ${g.label}`;
+const groupToggles = document.createElement('span');
+groupToggles.style.cssText = 'display:inline-flex;gap:0.6rem;font-weight:400;margin-left:0.5rem;';
+groupToggles.innerHTML = `
+<button class="toggle-all" onclick="toggleGroup('${g.key}', true)">Select all</button>
+<button class="toggle-all" onclick="toggleGroup('${g.key}', false)">Deselect all</button>
+`;
+heading.appendChild(groupToggles);
 groupSection.appendChild(heading);
 const groupChecks = CHECKS.filter(c => c.group === g.key);
 if (groupChecks.length === 0) {
@@ -271,6 +274,12 @@ container.appendChild(groupSection);
 }
 function toggleAll(on) {
 CHECKS.forEach(c => {
+const el = document.getElementById('chk_' + c.id);
+if (el) el.checked = on;
+});
+}
+function toggleGroup(groupKey, on) {
+CHECKS.filter(c => c.group === groupKey).forEach(c => {
 const el = document.getElementById('chk_' + c.id);
 if (el) el.checked = on;
 });
