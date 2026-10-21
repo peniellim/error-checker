@@ -169,7 +169,7 @@ const GROUPS = [
 { key:'Coupang', label:'Coupang' },
 { key:'WBD', label:'WBD' },
 { key:'PCCW', label:'PCCW' },
-{ key:'CJENM', label:'CJENM' },
+{ key:'KCP', label:'KCP' },
 { key:'Netflix', label:'Netflix' }
 ];
 const CHECKS = [
@@ -216,6 +216,18 @@ const CHECKS = [
 { id:'pccw_ampm', group:'PCCW', label:'Time: am/pm without space', defaultOn:true },
 { id:'pccw_hyphen_middle', group:'PCCW', label:'Hyphen for dialogue exchange', defaultOn:true },
 { id:'pccw_uppercase', group:'PCCW', label:'All uppercase', defaultOn:true },
+{ id:'kcp_mindur1s', group:'KCP', label:'Min duration 1 second', defaultOn:true },
+{ id:'kcp_maxdur7s', group:'KCP', label:'Max duration 7 seconds', defaultOn:true },
+{ id:'kcp_char42', group:'KCP', label:'Character limit: 42', defaultOn:true },
+{ id:'kcp_maxlines2', group:'KCP', label:'Maximum 2 lines', defaultOn:true },
+{ id:'kcp_hyp_space', group:'KCP', label:'Spacing after hyphen', defaultOn:true },
+{ id:'kcp_noitalics', group:'KCP', label:'No italics', defaultOn:true },
+{ id:'kcp_nouppercase', group:'KCP', label:'No all uppercase', defaultOn:true },
+{ id:'kcp_endpunct', group:'KCP', label:'Ending punctuation', defaultOn:true },
+{ id:'kcp_ampm', group:'KCP', label:'Time: a.m./p.m. with space', defaultOn:true },
+{ id:'kcp_numtreat', group:'KCP', label:'Number treatment', defaultOn:true },
+{ id:'kcp_currency', group:'KCP', label:'Currency', defaultOn:true },
+{ id:'kcp_credit', group:'KCP', label:'Ending credit', defaultOn:true },
 { id:'net_mindur20', group:'Netflix', label:'Min duration 20 frames', defaultOn:true },
 { id:'net_mindur25', group:'Netflix', label:'Min duration 25 frames', defaultOn:true },
 { id:'net_maxdur7s', group:'Netflix', label:'Max duration 7 seconds', defaultOn:true },
@@ -1047,6 +1059,106 @@ errs.push('PCCW No ending punctuation');
 allErrorsSet.add('PCCW Missing punctuation');
 }
 }
+// KCP CHECKS
+if (durS != null) {
+if (isChecked('kcp_mindur1s') && durS < 1.0) {
+errs.push('KCP Short: < 1s');
+allErrorsSet.add('KCP Short (< 1s)');
+}
+if (isChecked('kcp_maxdur7s') && durS > 7.0) {
+errs.push('KCP Long: > 7s');
+allErrorsSet.add('KCP Long (> 7s)');
+}
+}
+if (isChecked('kcp_char42') && lines.length > 0) {
+const maxFound = Math.max(...lines.map(l => stripTags(l).length));
+if (maxFound > 42) {
+errs.push(`KCP Over limit: ${maxFound}ch`);
+allErrorsSet.add('KCP Char limit 42');
+}
+}
+if (isChecked('kcp_maxlines2') && lines.length > 2) {
+errs.push(`KCP Lines: ${lines.length}`);
+allErrorsSet.add('KCP Maximum 2 lines');
+}
+if (isChecked('kcp_hyp_space') && lines.some(l => /^-[^\s]/.test(l.trim()))) {
+errs.push('KCP Hyphen missing space');
+allErrorsSet.add('KCP Spacing after hyphen');
+}
+if (isChecked('kcp_noitalics') && r.hasItalics) {
+errs.push('KCP Italics detected');
+allErrorsSet.add('KCP No italics');
+}
+const kcpPlain = stripTags(r.dialogue).trim();
+if (isChecked('kcp_nouppercase')) {
+const letters = kcpPlain.match(/[A-Za-z]/g);
+if (letters && letters.length > 0 && letters.every(ch => ch === ch.toUpperCase())) {
+errs.push('KCP All uppercase');
+allErrorsSet.add('KCP All uppercase');
+}
+}
+if (isChecked('kcp_endpunct') && kcpPlain.length > 0 && !/[.,?!\)]\s*$/.test(kcpPlain)) {
+errs.push('KCP No ending punctuation');
+allErrorsSet.add('KCP Ending punctuation');
+}
+if (isChecked('kcp_ampm')) {
+const text = stripTags(r.dialogue);
+const matches = text.match(/\b\d{1,2}(?::\d{2})?\s*(?:a\.?\s*m\.?|p\.?\s*m\.?)\.?/gi) || [];
+matches.forEach(t => {
+const normalized = t.replace(/\s+/g,' ').trim();
+const ampmMatch = normalized.match(/([ap])\.?\s*([m])\.?$/i);
+if (!ampmMatch) return;
+const ampmPart = ampmMatch[1] + ampmMatch[2];
+const isUppercase = /[A-Z]/.test(normalized);
+const correctFormat = isUppercase
+? (ampmPart.toUpperCase() === 'AM' ? 'A.M.' : 'P.M.')
+: (ampmPart.toLowerCase() === 'am' ? 'a.m.' : 'p.m.');
+const correct = normalized.replace(/[ap]\.?\s*[m]\.?$/i, correctFormat);
+if (normalized !== correct) {
+errs.push(`KCP Incorrect a.m./p.m. format: ${t}`);
+allErrorsSet.add('KCP Time a.m./p.m. with space');
+}
+});
+}
+if (isChecked('kcp_numtreat') && r.dialogue.trim() !== '') {
+const text = stripTags(r.dialogue);
+const isAllUppercase = text.length > 0 && /^[A-Z\s\d\p{P}]*$/u.test(text);
+if (!isAllUppercase) {
+const digitMatches = [...text.matchAll(/\b\d+(?:\.\d+)?(?:,\d{3})*(?:st|nd|rd|th)?\b/gi)];
+const wordMatches = [...text.matchAll(numberWordsRegex())];
+const totalNumbers = digitMatches.length + wordMatches.length;
+if (totalNumbers > 1) {
+digitMatches.forEach(m => {
+const index = m.index;
+const isFirstWord = index === 0;
+const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
+if (isFirstWord || isFirstAfterPeriod) {
+errs.push(`KCP Spell out number: ${m[0]}`);
+allErrorsSet.add('KCP Number treatment');
+}
+});
+wordMatches.forEach(m => {
+const index = m.index;
+const isFirstWord = index === 0;
+const isFirstAfterPeriod = /\.\s+$/.test(text.slice(0, index));
+if (!isFirstWord && !isFirstAfterPeriod) {
+errs.push(`KCP Should be in numeral: ${m[0]}`);
+allErrorsSet.add('KCP Number treatment');
+}
+});
+}
+}
+}
+if (isChecked('kcp_currency')) {
+const text = stripTags(r.dialogue);
+const numWords = [...Object.keys(SMALL_NUMBERS), ...Object.keys(TENS), ...Object.keys(SCALES)].join('|');
+const wonRegex = new RegExp('(?:\\d[\\d,.]*|\\b(?:' + numWords + ')\\b)\\s+won\\b', 'gi');
+const wonMatches = text.match(wonRegex) || [];
+wonMatches.forEach(m => {
+errs.push(`KCP Currency must be in dollars: ${m}`);
+allErrorsSet.add('KCP Currency (won)');
+});
+}
 if (isChecked('coup_partial_italics') && r.partialItalic && !r.allTextItalic && r.italicPunctuation.length > 0) {
 errs.push(`Partial italics punctuation: ${r.italicPunctuation.join(', ')}`);
 allErrorsSet.add('Partial italics punctuation');
@@ -1223,6 +1335,14 @@ allErrorsSet.add('PCCW Number treatment');
 }
 }
 });
+if (isChecked('kcp_credit') && processed.length > 0) {
+const last = processed[processed.length - 1];
+const lastText = stripTags(last.dialogue);
+if (!/\(Subtitles provided by KOCOWA\.\)/i.test(lastText)) {
+last.errors.push('Missing KCP credit: (Subtitles provided by KOCOWA.)');
+allErrorsSet.add('KCP Missing ending credit');
+}
+}
 if (isChecked('coup_credit') && processed.length > 0) {
 const last = processed[processed.length - 1];
 const lastText = stripTags(last.dialogue);
